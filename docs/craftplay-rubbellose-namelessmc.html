@@ -1,0 +1,273 @@
+<!--
+NamelessMC Wiki-Version
+
+1. Lade die Bilder aus docs/wiki-assets in NamelessMC bzw. in deinen Webspace hoch.
+2. Ersetze die src-Werte /uploads/wiki-assets/... durch die echten Bild-URLs deiner Homepage.
+3. Fuege den Inhalt danach in den NamelessMC-Wiki-Editor ein.
+-->
+
+<h1>Craftplay Rubbellose</h1>
+
+<p>
+  <img src="/uploads/wiki-assets/craftplay-rubbellose-cover.png" alt="Craftplay Rubbellose Titelgrafik" style="max-width:100%;height:auto;">
+</p>
+
+<p>
+  <strong>Craftplay Rubbellose</strong> bringt ein vollwertiges Rubellos-System auf den Minecraft-Server.
+  Spieler kaufen Rubellose im GUI-Shop, rubbeln die Felder direkt im Inventar frei und erhalten ihre Gewinne
+  automatisch. Das Plugin arbeitet mit Vault-Economy, speichert Statistiken und offene Lose dauerhaft und kann
+  wahlweise mit SQLite oder MySQL betrieben werden.
+</p>
+
+<h2>Kurzer Ueberblick</h2>
+
+<table class="table table-striped table-bordered">
+  <tbody>
+    <tr><th>Bereich</th><th>Details</th></tr>
+    <tr><td>Plugin</td><td>Craftplay-Rubbellose</td></tr>
+    <tr><td>Version</td><td>0.3.0</td></tr>
+    <tr><td>Server</td><td>Paper/Purpur 1.21.x</td></tr>
+    <tr><td>Java</td><td>Java 21</td></tr>
+    <tr><td>Wirtschaft</td><td>Vault + Economy-Plugin</td></tr>
+    <tr><td>Datenbank</td><td>SQLite standardmaessig, MySQL optional</td></tr>
+    <tr><td>Sprache</td><td>Deutsch und Englisch</td></tr>
+    <tr><td>Optional</td><td>PlaceholderAPI</td></tr>
+  </tbody>
+</table>
+
+<h2>Highlights</h2>
+
+<ul>
+  <li>GUI-Shop mit mehreren Rubellos-Typen</li>
+  <li>animierter Start per Actionbar-Ladebalken</li>
+  <li>echtes Rubbel-GUI mit neun verdeckten Feldern</li>
+  <li>automatische Gewinnauszahlung nach drei gleichen Treffern</li>
+  <li>Jackpot-Broadcasts und Jackpot-Historie</li>
+  <li>Tageslimits fuer Kaeufe und Oeffnungen</li>
+  <li>Besitzlimit fuer echte Plugin-Rubellose</li>
+  <li>Persistenz: offene Rubellose bleiben nach Disconnect oder Restart erhalten</li>
+  <li>Spieler- und Serverstatistiken</li>
+  <li>PlaceholderAPI-Unterstuetzung fuer externe Anzeigen</li>
+  <li>Admin-Befehle fuer Reload, Diagnose, Give und offene Lose</li>
+  <li>Daily-Los, Lucky Hour, Streaks, Serien, Eventlose und Mystery-Multiplikator</li>
+  <li>Rubellos-Pass, taegliche Auftraege, Serverziele, Gruppenziele, Pity-System und Risiko-Spiel</li>
+</ul>
+
+<h2>So Funktioniert Es</h2>
+
+<p>
+  Spieler oeffnen den Shop mit <code>/rubbellos</code>, waehlen ein Rubellos aus und kaufen es mit Coins.
+  Das gekaufte Rubellos liegt als echtes Plugin-Item im Inventar und kann per Rechtsklick geoeffnet werden.
+</p>
+
+<p>
+  Beim Oeffnen wird das Ergebnis sofort serverseitig berechnet und gespeichert. Danach oeffnet sich das
+  Rubbel-GUI: Der Spieler deckt die Felder einzeln auf. Sobald genug Felder geoeffnet wurden, zeigt das Plugin
+  das Ergebnis an und zahlt den Gewinn automatisch aus. Wird der Spieler getrennt oder der Server neu gestartet,
+  kann das offene Rubellos mit <code>/rubbellos claim</code> fortgesetzt werden.
+</p>
+
+<h2>GUI Bilder</h2>
+
+<h3>Shop-GUI</h3>
+<p>
+  <img src="/uploads/wiki-assets/gui-shop.png" alt="Craftplay Rubbellose Shop-GUI" style="max-width:100%;height:auto;">
+</p>
+<p>
+  Im Shop werden die verfuegbaren Rubellos-Typen angezeigt. Jedes Los zeigt Preis, Gewinnchance und moegliche
+  Gewinne. Die Statistik in der Mitte informiert ueber gekaufte und geoeffnete Lose, Tageslimits und Besitzlimit.
+</p>
+
+<h3>Rubbel-GUI</h3>
+<p>
+  <img src="/uploads/wiki-assets/gui-rubbelkarte.png" alt="Craftplay Rubbellose Rubbel-GUI" style="max-width:100%;height:auto;">
+</p>
+<p>
+  Das Rubbel-GUI besteht aus neun verdeckten Feldern. Jedes Feld wird per Klick freigerubbelt. Das offene Los
+  bleibt gespeichert, solange es noch nicht abgeschlossen wurde.
+</p>
+
+<h3>Ergebnis-GUI</h3>
+<p>
+  <img src="/uploads/wiki-assets/gui-ergebnis.png" alt="Craftplay Rubbellose Ergebnis-GUI" style="max-width:100%;height:auto;">
+</p>
+<p>
+  Nach dem Freirubbeln zeigt das Plugin das Ergebnis an. Drei gleiche Gewinnfelder loesen den Gewinn aus.
+  Geldbetraege werden ueber Vault ausgezahlt, Command-Belohnungen werden direkt vom Server ausgefuehrt.
+</p>
+
+<h3>Jackpot-Historie</h3>
+<p>
+  <img src="/uploads/wiki-assets/gui-jackpots.png" alt="Craftplay Rubbellose Jackpot-Historie" style="max-width:100%;height:auto;">
+</p>
+<p>
+  Die Jackpot-Historie zeigt die letzten Jackpot-Gewinne mit Spieler, Rubellos-Typ, Gewinn, Geldbetrag und Datum.
+</p>
+
+<h2>Standard-Rubbellose</h2>
+
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <th>Typ</th>
+      <th>Anzeige</th>
+      <th>Preis</th>
+      <th>Kaufbar</th>
+      <th>Besonderheit</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>small</code></td><td>Kleines Rubellos</td><td>500 Coins</td><td>Ja</td><td>guenstiger Einstieg mit kleinem Jackpot</td></tr>
+    <tr><td><code>medium</code></td><td>Mittleres Rubellos</td><td>1.500 Coins</td><td>Ja</td><td>hoehere Gewinne und Rare-Key moeglich</td></tr>
+    <tr><td><code>premium</code></td><td>Premium Rubellos</td><td>5.000 Coins</td><td>Ja</td><td>hohe Geldgewinne, Epic-Key und Premium-Jackpot</td></tr>
+    <tr><td><code>event</code></td><td>Event-Rubellos</td><td>0 Coins</td><td>Nein</td><td>fuer Events, Giveaways oder Admin-Ausgabe</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Die Lose und Belohnungen werden in <code>rewards.yml</code> konfiguriert. Chancen werden gewichtet berechnet
+  und muessen nicht exakt 100 ergeben.
+</p>
+
+<h2>Wichtige Befehle</h2>
+
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr><th>Befehl</th><th>Beschreibung</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>/rubbellos</code></td><td>Shop oeffnen</td></tr>
+    <tr><td><code>/rubbellos shop</code></td><td>Shop oeffnen</td></tr>
+    <tr><td><code>/rubbellos claim</code></td><td>offenes Rubellos fortsetzen</td></tr>
+    <tr><td><code>/rubbellos daily</code></td><td>taegliches Gratis-Los abholen</td></tr>
+    <tr><td><code>/rubbellos history</code></td><td>eigene Gewinn-Historie anzeigen</td></tr>
+    <tr><td><code>/rubbellos series</code></td><td>Rubellos-Serien anzeigen</td></tr>
+    <tr><td><code>/rubbellos pass</code></td><td>Rubellos-Pass anzeigen</td></tr>
+    <tr><td><code>/rubbellos quests</code></td><td>taegliche Auftraege anzeigen</td></tr>
+    <tr><td><code>/rubbellos board</code></td><td>Jackpot-, Pass- und Ziel-Board oeffnen</td></tr>
+    <tr><td><code>/rubbellos risk</code></td><td>letzten Geldgewinn riskieren</td></tr>
+    <tr><td><code>/rubbellos gift &lt;spieler&gt; &lt;typ&gt; &lt;anzahl&gt;</code></td><td>eigene Lose verschenken</td></tr>
+    <tr><td><code>/rubbellos jackpots</code></td><td>Jackpot-Historie oeffnen oder anzeigen</td></tr>
+    <tr><td><code>/rubbellos stats</code></td><td>Serverstatistiken anzeigen</td></tr>
+    <tr><td><code>/rubbellos info &lt;spieler&gt;</code></td><td>Spielerstatistik anzeigen</td></tr>
+    <tr><td><code>/rubbellos list</code></td><td>geladene Rubellos-Typen anzeigen</td></tr>
+    <tr><td><code>/rubbellos debug</code></td><td>Diagnosewerte anzeigen</td></tr>
+    <tr><td><code>/rubbellos resetpending &lt;spieler&gt;</code></td><td>offenes Rubellos eines Spielers entfernen</td></tr>
+    <tr><td><code>/rubbellos give &lt;spieler&gt; &lt;typ&gt; &lt;anzahl&gt;</code></td><td>Rubellose an Spieler geben</td></tr>
+    <tr><td><code>/rubbellos simulate &lt;typ&gt; &lt;anzahl&gt;</code></td><td>Auszahlungen simulieren</td></tr>
+    <tr><td><code>/rubbellos reload</code></td><td>Config, GUI, Sprache und Rewards neu laden</td></tr>
+    <tr><td><code>/scratchcard</code></td><td>englischer Alias fuer <code>/rubbellos</code></td></tr>
+    <tr><td><code>/cpscratchdiag</code></td><td>Diagnose zur geladenen Command-Version</td></tr>
+  </tbody>
+</table>
+
+<h2>Rechte</h2>
+
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr><th>Permission</th><th>Zweck</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>craftplay.scratchcards.use</code></td><td>Rubellose nutzen</td></tr>
+    <tr><td><code>craftplay.scratchcards.shop</code></td><td>Shop oeffnen</td></tr>
+    <tr><td><code>craftplay.scratchcards.buy</code></td><td>Rubellose kaufen</td></tr>
+    <tr><td><code>craftplay.scratchcards.stats</code></td><td>Statistiken anzeigen</td></tr>
+    <tr><td><code>craftplay.scratchcards.give</code></td><td>Rubellose geben</td></tr>
+    <tr><td><code>craftplay.scratchcards.reload</code></td><td>Plugin neu laden</td></tr>
+    <tr><td><code>craftplay.scratchcards.admin</code></td><td>Admin-Funktionen</td></tr>
+  </tbody>
+</table>
+
+<h2>Installation</h2>
+
+<ol>
+  <li>Server stoppen.</li>
+  <li><code>Craftplay-Rubbellose-0.3.0.jar</code> in den <code>plugins</code>-Ordner kopieren.</li>
+  <li>Vault und ein kompatibles Economy-Plugin installieren.</li>
+  <li>Server starten.</li>
+  <li>Dateien in <code>plugins/Craftplay-Rubbellose/</code> anpassen.</li>
+  <li><code>/rubbellos reload</code> ausfuehren oder den Server neu starten.</li>
+</ol>
+
+<h2>Konfiguration</h2>
+
+<p>Die wichtigsten Dateien liegen nach dem ersten Start im Plugin-Ordner:</p>
+
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr><th>Datei</th><th>Zweck</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>config.yml</code></td><td>Sprache, Datenbank, Limits, Cooldowns und Ladebalken</td></tr>
+    <tr><td><code>gui.yml</code></td><td>Shop-GUI, Rubbel-GUI, Jackpot-Historie und Item-Anzeigen</td></tr>
+    <tr><td><code>rewards.yml</code></td><td>Rubellos-Typen, Preise, Chancen und Gewinne</td></tr>
+    <tr><td><code>language_de.yml</code></td><td>deutsche Nachrichten</td></tr>
+    <tr><td><code>language_en.yml</code></td><td>englische Nachrichten</td></tr>
+  </tbody>
+</table>
+
+<p>Standardmaessig nutzt das Plugin SQLite. Fuer groessere Server kann MySQL in <code>config.yml</code> aktiviert werden:</p>
+
+<pre><code>database:
+  use_mysql: true</code></pre>
+
+<p>Danach werden Host, Port, Datenbankname, Benutzername und Passwort im MySQL-Block eingetragen.</p>
+
+<h2>Sicherheit Und Persistenz</h2>
+
+<p>
+  Craftplay Rubbellose markiert echte Lose ueber den PersistentDataContainer. Umbenanntes Papier wird deshalb
+  nicht akzeptiert. Das Rubellos-Item wird beim Start des Rubbelvorgangs entfernt, das Ergebnis wird sofort
+  berechnet und gespeichert. Die Animation im GUI ist nur die Darstellung fuer den Spieler.
+</p>
+
+<p>
+  Pro Spieler ist nur ein offenes Rubellos erlaubt. Offene Lose werden in der Datenbank gespeichert und koennen
+  nach Disconnect oder Restart mit <code>/rubbellos claim</code> fortgesetzt werden. Admins koennen fehlerhafte
+  offene Lose mit <code>/rubbellos resetpending &lt;spieler&gt;</code> bereinigen.
+</p>
+
+<h2>PlaceholderAPI</h2>
+
+<p>Wenn PlaceholderAPI installiert ist, stehen diese Platzhalter zur Verfuegung:</p>
+
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr><th>Placeholder</th><th>Bedeutung</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>%cpsc_opened%</code></td><td>geoeffnete Rubellose</td></tr>
+    <tr><td><code>%cpsc_bought%</code></td><td>gekaufte Rubellose</td></tr>
+    <tr><td><code>%cpsc_won_money%</code></td><td>insgesamt gewonnenes Geld</td></tr>
+    <tr><td><code>%cpsc_jackpots%</code></td><td>gewonnene Jackpots</td></tr>
+    <tr><td><code>%cpsc_best_win%</code></td><td>bester Gewinn</td></tr>
+  </tbody>
+</table>
+
+<h2>Empfohlener Testablauf</h2>
+
+<ol>
+  <li><code>/rubbellos debug</code></li>
+  <li><code>/rubbellos list</code></li>
+  <li><code>/rubbellos give &lt;deinName&gt; small 1</code></li>
+  <li>Rubellos per Rechtsklick oeffnen</li>
+  <li>Ladebalken pruefen</li>
+  <li>alle Felder im GUI freirubbeln</li>
+  <li>Auszahlung und Datenbankeintrag pruefen</li>
+  <li><code>/rubbellos stats</code></li>
+  <li><code>/rubbellos info &lt;deinName&gt;</code></li>
+</ol>
+
+<h2>Fehlerbehebung</h2>
+
+<p>
+  Wenn Kaufen nicht moeglich ist, sollte zuerst <code>/rubbellos debug</code> ausgefuehrt werden. Steht dort bei
+  Vault-Economy <code>nicht gefunden</code>, ist zwar Vault installiert, aber kein Economy-Plugin als Vault-Provider
+  registriert. In diesem Fall Economy-Plugin pruefen, installieren oder den Server neu starten.
+</p>
+
+<p>
+  Wenn alte Command-Mappings aktiv sind, hilft ein kompletter Serverneustart. Das Plugin repariert zwar alte oder
+  deaktivierte Legacy-Zuordnungen fuer <code>/rubellos</code> und registriert <code>/rubbellos</code>,
+  <code>/scratchcard</code> und <code>/cpscratchdiag</code>, ein sauberer Neustart ist trotzdem die stabilste Loesung.
+</p>

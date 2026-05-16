@@ -1,0 +1,22 @@
+target/
+*.class
+
+# Lokale Server-/Plugin-Laufzeitdaten
+plugins/
+*.db
+*.db-shm
+*.db-wal
+debug-errors.txt
+*.log
+
+# IDE und Betriebssystem
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Lokale Bildduplikate aus der Entwicklung; die Wiki-Bilder liegen unter docs/wiki-assets.
+/*.png
+/*.jpg
+/*.jpeg

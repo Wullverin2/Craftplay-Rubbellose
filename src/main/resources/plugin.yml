@@ -1,0 +1,46 @@
+name: Craftplay-Rubbellose
+main: de.craftplay.scratchcards.CraftplayScratchcardsPlugin
+version: 0.3.0
+api-version: "1.21"
+author: Wullverin
+softdepend: [Vault, PlaceholderAPI]
+commands:
+  rubbellos:
+    description: Oeffnet den Rubellos-Shop oder verwaltet Rubellose.
+    usage: /rubbellos
+  scratchcard:
+    description: Opens the scratchcard shop or manages scratchcards.
+    usage: /scratchcard
+  cpscratchdiag:
+    description: Zeigt Diagnoseinformationen zur geladenen Craftplay-Rubbellose-Version.
+    usage: /cpscratchdiag
+permissions:
+  craftplay.scratchcards.use:
+    description: Erlaubt die normale Nutzung von Rubellosen.
+    default: true
+  craftplay.scratchcards.shop:
+    description: Erlaubt das Oeffnen des Shops.
+    default: true
+  craftplay.scratchcards.buy:
+    description: Erlaubt den Kauf von Rubellosen.
+    default: true
+  craftplay.scratchcards.daily:
+    description: Erlaubt das Abholen des taeglichen Gratis-Loses.
+    default: true
+  craftplay.scratchcards.stats:
+    description: Erlaubt das Anzeigen der Statistik.
+    default: op
+  craftplay.scratchcards.admin:
+    description: Erlaubt alle Admin-Funktionen.
+    default: op
+    children:
+      craftplay.scratchcards.reload: true
+      craftplay.scratchcards.give: true
+      craftplay.scratchcards.stats: true
+      craftplay.scratchcards.daily: true
+  craftplay.scratchcards.reload:
+    description: Erlaubt /rubbellos reload.
+    default: op
+  craftplay.scratchcards.give:
+    description: Erlaubt /rubbellos give.
+    default: op

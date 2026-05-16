@@ -1,0 +1,176 @@
+scratchcards:
+  small:
+    display_name: "&aKleines Rubellos"
+    material: PAPER
+    price: 500
+    buyable: true
+    shop_material: PAPER
+    rewards:
+      nothing:
+        rarity: common
+        chance: 55.0
+        display_name: "&7Leider kein Gewinn"
+        symbol_material: BARRIER
+      coins_100:
+        rarity: common
+        chance: 25.0
+        display_name: "&a100 Coins"
+        symbol_material: GOLD_NUGGET
+        money: 100
+      coins_500:
+        rarity: uncommon
+        chance: 12.0
+        display_name: "&6500 Coins"
+        symbol_material: GOLD_INGOT
+        money: 500
+      coins_1500:
+        rarity: rare
+        chance: 6.0
+        display_name: "&e1.500 Coins"
+        symbol_material: EMERALD
+        money: 1500
+      vote_key:
+        rarity: epic
+        chance: 1.5
+        display_name: "&b1 Vote-Key"
+        symbol_material: TRIPWIRE_HOOK
+        commands:
+          - "crate key give %player% vote 1"
+      jackpot:
+        rarity: jackpot
+        chance: 0.5
+        display_name: "&dJackpot"
+        symbol_material: NETHER_STAR
+        money: 10000
+        broadcast: true
+
+  medium:
+    display_name: "&6Mittleres Rubellos"
+    material: PAPER
+    price: 1500
+    buyable: true
+    shop_material: MAP
+    rewards:
+      nothing:
+        rarity: common
+        chance: 45.0
+        display_name: "&7Leider kein Gewinn"
+        symbol_material: BARRIER
+      coins_500:
+        rarity: common
+        chance: 28.0
+        display_name: "&6500 Coins"
+        symbol_material: GOLD_INGOT
+        money: 500
+      coins_1500:
+        rarity: uncommon
+        chance: 18.0
+        display_name: "&e1.500 Coins"
+        symbol_material: EMERALD
+        money: 1500
+      coins_5000:
+        rarity: rare
+        chance: 7.0
+        display_name: "&a5.000 Coins"
+        symbol_material: DIAMOND
+        money: 5000
+      rare_key:
+        rarity: epic
+        chance: 1.5
+        display_name: "&b1 Rare-Key"
+        symbol_material: TRIPWIRE_HOOK
+        commands:
+          - "crate key give %player% rare 1"
+      jackpot:
+        rarity: jackpot
+        chance: 0.5
+        display_name: "&dMedium Jackpot"
+        symbol_material: NETHER_STAR
+        money: 25000
+        broadcast: true
+
+  premium:
+    display_name: "&dPremium Rubellos"
+    material: PAPER
+    price: 5000
+    buyable: true
+    shop_material: NETHER_STAR
+    rewards:
+      nothing:
+        rarity: common
+        chance: 35.0
+        display_name: "&7Leider kein Gewinn"
+        symbol_material: BARRIER
+      coins_2500:
+        rarity: uncommon
+        chance: 32.0
+        display_name: "&e2.500 Coins"
+        symbol_material: GOLD_BLOCK
+        money: 2500
+      coins_7500:
+        rarity: rare
+        chance: 20.0
+        display_name: "&a7.500 Coins"
+        symbol_material: EMERALD_BLOCK
+        money: 7500
+      coins_20000:
+        rarity: epic
+        chance: 10.0
+        display_name: "&b20.000 Coins"
+        symbol_material: DIAMOND_BLOCK
+        money: 20000
+      epic_key:
+        rarity: legendary
+        chance: 2.0
+        display_name: "&51 Epic-Key"
+        symbol_material: TRIPWIRE_HOOK
+        commands:
+          - "crate key give %player% epic 1"
+      jackpot:
+        rarity: jackpot
+        chance: 1.0
+        display_name: "&dPremium Jackpot"
+        symbol_material: NETHER_STAR
+        money: 100000
+        broadcast: true
+
+  event:
+    display_name: "&bEvent-Rubellos"
+    material: PAPER
+    price: 0
+    buyable: false
+    shop_material: HEART_OF_THE_SEA
+    available_from: "2026-01-01 00:00"
+    expires_at: "2026-12-31 23:59"
+    rewards:
+      nothing:
+        rarity: common
+        chance: 40.0
+        display_name: "&7Leider kein Gewinn"
+        symbol_material: BARRIER
+      coins_1000:
+        rarity: uncommon
+        chance: 35.0
+        display_name: "&a1.000 Coins"
+        symbol_material: GOLD_INGOT
+        money: 1000
+      coins_10000:
+        rarity: rare
+        chance: 15.0
+        display_name: "&b10.000 Coins"
+        symbol_material: DIAMOND
+        money: 10000
+      event_key:
+        rarity: epic
+        chance: 8.0
+        display_name: "&d1 Event-Key"
+        symbol_material: TRIPWIRE_HOOK
+        commands:
+          - "crate key give %player% event 1"
+      jackpot:
+        rarity: jackpot
+        chance: 2.0
+        display_name: "&6Event Jackpot"
+        symbol_material: NETHER_STAR
+        money: 50000
+        broadcast: true

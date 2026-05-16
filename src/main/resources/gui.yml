@@ -1,0 +1,254 @@
+shop:
+  title: "&8Rubellos-Shop"
+  size: 27
+  filler:
+    enabled: true
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+  card_slots:
+    small: 10
+    medium: 12
+    premium: 14
+    event: 16
+  card_item:
+    name: "%type%"
+    lore:
+      - "&7Preis: &e%price%"
+      - "&7Gewinnchance: &e%chance%%"
+      - "&7Lucky Hour: &e%lucky_hour%"
+      - ""
+      - "&7Gewinne:"
+      - "%reward_chances%"
+      - ""
+      - "&aKlicke zum Kaufen"
+    reward_chance_line: "&8- &f%reward% &7[%rarity%&7]: &e%chance%%"
+  unavailable_lore:
+    - "&cDieses Rubellos ist aktuell nicht kaufbar."
+  info:
+    slot: 22
+    material: BOOK
+    name: "&eDeine Rubellos-Statistik"
+    lore:
+      - "&7Gekauft: &f%cpsc_bought%"
+      - "&7Geöffnet: &f%cpsc_opened%"
+      - "&7Gewonnen: &e%cpsc_won_money%"
+      - "&7Jackpots: &d%cpsc_jackpots%"
+      - ""
+      - "&7Kaeufe heute: &e%daily_bought%/%daily_limit%"
+      - "&7Geoeffnet heute: &e%daily_opened%/%daily_open_limit%"
+      - "&7Gratis-Los: &e%daily_status%"
+      - "&7Im Besitz: &e%owned%/%owned_limit%"
+
+jackpots:
+  title: "&8Jackpot-Historie"
+  size: 27
+  limit: 14
+  filler:
+    enabled: true
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+  entry_slots:
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 19
+    - 20
+    - 21
+    - 22
+    - 23
+    - 24
+    - 25
+  entry_item:
+    material: NETHER_STAR
+    name: "&d#%position% &f%player%"
+    lore:
+      - "&7Typ: &e%type%"
+      - "&7Gewinn: &d%reward%"
+      - "&7Geld: &e%money%"
+      - "&7Datum: &f%date%"
+  empty:
+    slot: 13
+    material: BARRIER
+    name: "&7Noch keine Jackpots"
+    lore:
+      - "&7Sobald ein Jackpot gewonnen wird,"
+      - "&7erscheint er hier."
+
+history:
+  title: "&8Deine Rubellos-Historie"
+  size: 45
+  limit: 21
+  filler:
+    enabled: true
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+  entry_slots:
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 19
+    - 20
+    - 21
+    - 22
+    - 23
+    - 24
+    - 25
+    - 28
+    - 29
+    - 30
+    - 31
+    - 32
+    - 33
+    - 34
+  entry_item:
+    material: PAPER
+    name: "&6#%position% &f%reward%"
+    lore:
+      - "&7Typ: &e%type%"
+      - "&7Gewinn: &e%reward%"
+      - "&7Geld: &e%money%"
+      - "&7Jackpot: &d%jackpot%"
+      - "&7Datum: &f%date%"
+  empty:
+    slot: 22
+    material: BARRIER
+    name: "&7Noch keine Historie"
+    lore:
+      - "&7Sobald du Rubellose fertig rubbelst,"
+      - "&7erscheinen deine Ergebnisse hier."
+
+board:
+  title: "&8Rubellos-Board"
+  size: 45
+  filler:
+    enabled: true
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+  items:
+    jackpots:
+      slot: 11
+      material: NETHER_STAR
+      name: "&dJackpot-Board"
+      lore:
+        - "&7Geoeffnete Lose gesamt: &e%total_opens%"
+        - "&7Letzte Jackpots:"
+        - "&f%latest_jackpots%"
+    pass:
+      slot: 13
+      material: EXPERIENCE_BOTTLE
+      name: "&6Rubellos-Pass"
+      lore:
+        - "&7Saison: &e%pass_season%"
+        - "&7XP: &e%pass_xp%"
+        - "&7Belohnte Level: &e%pass_claimed_levels%"
+    quests:
+      slot: 15
+      material: WRITABLE_BOOK
+      name: "&aTaegliche Auftraege"
+      lore:
+        - "&f%quests%"
+    group_goals:
+      slot: 21
+      material: BEACON
+      name: "&bGruppenziele"
+      lore:
+        - "&f%group_goals%"
+    lucky_hour:
+      slot: 23
+      material: CLOCK
+      name: "&eLucky Hour"
+      lore:
+        - "&7Aktiv: &e%lucky_hour%"
+
+scratchcard:
+  title: "&8Rubellos: %type%"
+  size: 45
+  border:
+    enabled: true
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+    slots:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 17
+      - 18
+      - 26
+      - 27
+      - 35
+      - 36
+      - 37
+      - 38
+      - 39
+      - 40
+      - 41
+      - 42
+      - 43
+      - 44
+  scratch_slots:
+    - 20
+    - 21
+    - 22
+    - 23
+    - 24
+    - 29
+    - 30
+    - 31
+    - 32
+  hidden_item:
+    material: LIGHT_GRAY_STAINED_GLASS_PANE
+    name: "&7Verdecktes Feld"
+    lore:
+      - "&eKlicke zum Freirubbeln"
+  revealed_item:
+    name: "%reward%"
+    lore:
+      - "&7Feld &f%opened%&7/&f9"
+  info:
+    slot: 4
+    material: MAP
+    name: "&e%type%"
+    lore:
+      - "&7Geöffnet: &f%opened%"
+      - "&7Übrig: &f%remaining%"
+      - "&7Gewinn: &f%reward%"
+  close:
+    slot: 40
+    material: BARRIER
+    name: "&cSchließen"
+    lore:
+      - "&7Du kannst später mit &e/rubbellos claim"
+      - "&7fortfahren, solange das Los offen ist."
+  result:
+    slot: 40
+    material: CHEST
+    name: "&aErgebnis"
+    lore_win:
+      - "&7Du hast gewonnen:"
+      - "&e%reward%"
+    lore_lose:
+      - "&7Leider war dieses Rubellos eine Niete."
+
+items:
+  scratchcard:
+    name: "%type%"
+    lore:
+      - "&7Ein echtes Craftplay-Rubellos."
+      - "&7Typ: &f%type_id%"
+      - ""
+      - "&eRechtsklick zum Öffnen"

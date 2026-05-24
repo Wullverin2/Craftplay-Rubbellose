@@ -12,6 +12,7 @@ import de.craftplay.scratchcards.listener.GuiListener;
 import de.craftplay.scratchcards.listener.PlayerListener;
 import de.craftplay.scratchcards.papi.CpscPlaceholderExpansion;
 import de.craftplay.scratchcards.service.PurchaseService;
+import de.craftplay.scratchcards.service.BedrockSupportService;
 import de.craftplay.scratchcards.service.FeedbackService;
 import de.craftplay.scratchcards.service.FeatureService;
 import de.craftplay.scratchcards.service.ProgressionService;
@@ -36,6 +37,7 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
     private FeatureService featureService;
     private ProgressionService progressionService;
     private ScratchcardSessionManager sessionManager;
+    private BedrockSupportService bedrockSupportService;
     private CpscPlaceholderExpansion placeholderExpansion;
 
     @Override
@@ -63,6 +65,7 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
             feedbackService = new FeedbackService(configManager);
             featureService = new FeatureService(configManager, languageManager, databaseManager, economyManager);
             progressionService = new ProgressionService(configManager, languageManager, databaseManager, economyManager);
+            bedrockSupportService = new BedrockSupportService(this, configManager, languageManager, diagnosticLogger);
             guiManager = new GuiManager(configManager, rewardManager, databaseManager, itemFactory, featureService, progressionService);
             purchaseService = new PurchaseService(configManager, languageManager, databaseManager, economyManager, itemFactory, feedbackService, featureService, progressionService);
             sessionManager = new ScratchcardSessionManager(this, configManager, languageManager, databaseManager,
@@ -109,7 +112,7 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
 
     private void registerCommands() {
         ScratchcardCommand command = new ScratchcardCommand(this::reloadRuntimeConfiguration, getDescription().getVersion(), configManager,
-                languageManager, diagnosticLogger, economyManager, rewardManager, purchaseService, sessionManager, guiManager, databaseManager, featureService, progressionService, itemFactory);
+                languageManager, diagnosticLogger, economyManager, rewardManager, purchaseService, sessionManager, guiManager, databaseManager, featureService, progressionService, itemFactory, bedrockSupportService);
         CommandMapRepair commandMapRepair = new CommandMapRepair(this, diagnosticLogger);
         commandMapRepair.unregisterLegacy("rubellos");
         commandMapRepair.registerOrRepair("rubbellos", command, command);
@@ -120,7 +123,7 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(economyManager, this);
         getServer().getPluginManager().registerEvents(new PlayerListener(itemFactory, sessionManager, databaseManager,
-                languageManager, diagnosticLogger, configManager, purchaseService), this);
+                languageManager, diagnosticLogger, configManager, purchaseService, guiManager, bedrockSupportService), this);
         getServer().getPluginManager().registerEvents(new GuiListener(rewardManager, purchaseService, sessionManager, guiManager, languageManager, diagnosticLogger), this);
     }
 

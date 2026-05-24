@@ -4,6 +4,8 @@ import de.craftplay.scratchcards.config.LanguageManager;
 import de.craftplay.scratchcards.database.DatabaseManager;
 import de.craftplay.scratchcards.diagnostic.DiagnosticLogger;
 import de.craftplay.scratchcards.config.ConfigManager;
+import de.craftplay.scratchcards.gui.GuiManager;
+import de.craftplay.scratchcards.service.BedrockSupportService;
 import de.craftplay.scratchcards.service.PurchaseService;
 import de.craftplay.scratchcards.service.ScratchcardItemFactory;
 import de.craftplay.scratchcards.service.ScratchcardSessionManager;
@@ -25,10 +27,13 @@ public final class PlayerListener implements Listener {
     private final DiagnosticLogger diagnosticLogger;
     private final ConfigManager configManager;
     private final PurchaseService purchaseService;
+    private final GuiManager guiManager;
+    private final BedrockSupportService bedrockSupportService;
 
     public PlayerListener(ScratchcardItemFactory itemFactory, ScratchcardSessionManager sessionManager,
                           DatabaseManager databaseManager, LanguageManager languageManager, DiagnosticLogger diagnosticLogger,
-                          ConfigManager configManager, PurchaseService purchaseService) {
+                          ConfigManager configManager, PurchaseService purchaseService, GuiManager guiManager,
+                          BedrockSupportService bedrockSupportService) {
         this.itemFactory = itemFactory;
         this.sessionManager = sessionManager;
         this.databaseManager = databaseManager;
@@ -36,6 +41,8 @@ public final class PlayerListener implements Listener {
         this.diagnosticLogger = diagnosticLogger;
         this.configManager = configManager;
         this.purchaseService = purchaseService;
+        this.guiManager = guiManager;
+        this.bedrockSupportService = bedrockSupportService;
     }
 
     @EventHandler
@@ -60,6 +67,17 @@ public final class PlayerListener implements Listener {
         ItemStack item = hand == EquipmentSlot.OFF_HAND
                 ? event.getPlayer().getInventory().getItemInOffHand()
                 : event.getPlayer().getInventory().getItemInMainHand();
+        if (bedrockSupportService.isShopOpener(item)) {
+            event.setCancelled(true);
+            Player player = event.getPlayer();
+            if (!player.hasPermission("craftplay.scratchcards.shop")) {
+                languageManager.send(player, "no_permission");
+                return;
+            }
+            guiManager.openShop(player);
+            languageManager.send(player, "shop_opened");
+            return;
+        }
         if (itemFactory.readType(item).isEmpty()) {
             return;
         }
@@ -86,6 +104,7 @@ public final class PlayerListener implements Listener {
             if (configManager.config().getBoolean("daily.notify_on_join", true) && purchaseService.canClaimDaily(player)) {
                 languageManager.send(player, "daily_available");
             }
+            bedrockSupportService.handleJoin(player);
         } catch (Throwable throwable) {
             diagnosticLogger.error("Fehler im PlayerJoinEvent.", throwable);
         }

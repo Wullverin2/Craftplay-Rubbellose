@@ -58,6 +58,30 @@ daily:
   respect_owned_limit: true
   notify_on_join: true
 
+bedrock_support:
+  # Hilft Bedrock/Geyser-Spielern, wenn Slash-Commands vom Bedrock-Client blockiert werden.
+  enabled: true
+  detect_geyser: true
+  detect_floodgate: true
+  # Fallback, falls keine API verfuegbar ist. Passe die Prefixe an deine Floodgate/Geyser-Konfiguration an.
+  name_prefixes:
+    - "."
+    - "*"
+  notify_on_join: true
+  shop_item:
+    enabled: true
+    give_on_join: true
+    only_bedrock: true
+    keep_single: true
+    slot: 8
+    material: SUNFLOWER
+    name: "&6Rubellos-Menue"
+    lore:
+      - "&7Bedrock-kompatibler Shop-Oeffner."
+      - "&7Umgeht Clients, die Slash-Commands blockieren."
+      - ""
+      - "&eRechtsklick: Shop oeffnen"
+
 feedback:
   sounds:
     enabled: true

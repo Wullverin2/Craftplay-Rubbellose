@@ -13,6 +13,7 @@ import de.craftplay.scratchcards.model.Reward;
 import de.craftplay.scratchcards.model.ServerStats;
 import de.craftplay.scratchcards.model.SeriesProgress;
 import de.craftplay.scratchcards.model.ScratchcardType;
+import de.craftplay.scratchcards.service.BedrockSupportService;
 import de.craftplay.scratchcards.service.FeatureService;
 import de.craftplay.scratchcards.service.PurchaseService;
 import de.craftplay.scratchcards.service.ProgressionService;
@@ -50,6 +51,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
     private final FeatureService featureService;
     private final ProgressionService progressionService;
     private final ScratchcardItemFactory itemFactory;
+    private final BedrockSupportService bedrockSupportService;
 
     public ScratchcardCommand(Runnable reloadAction, String pluginVersion, ConfigManager configManager, LanguageManager languageManager,
                               DiagnosticLogger diagnosticLogger,
@@ -57,7 +59,8 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
                               RewardManager rewardManager, PurchaseService purchaseService,
                               ScratchcardSessionManager sessionManager, GuiManager guiManager,
                               DatabaseManager databaseManager, FeatureService featureService,
-                              ProgressionService progressionService, ScratchcardItemFactory itemFactory) {
+                              ProgressionService progressionService, ScratchcardItemFactory itemFactory,
+                              BedrockSupportService bedrockSupportService) {
         this.reloadAction = reloadAction;
         this.pluginVersion = pluginVersion;
         this.configManager = configManager;
@@ -72,6 +75,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
         this.featureService = featureService;
         this.progressionService = progressionService;
         this.itemFactory = itemFactory;
+        this.bedrockSupportService = bedrockSupportService;
     }
 
     @Override
@@ -285,6 +289,11 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Besitzlimit", "%value%", String.valueOf(configManager.config().getInt("limits.max_owned_scratchcards", 64))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Daily-Los", "%value%", configManager.config().getBoolean("daily.enabled", true)
                 + " typ=" + configManager.config().getString("daily.type", "small")));
+        String bedrockValue = String.valueOf(configManager.config().getBoolean("bedrock_support.enabled", true));
+        if (sender instanceof Player player) {
+            bedrockValue += " spielerBedrock=" + bedrockSupportService.isBedrockPlayer(player);
+        }
+        languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Bedrock-Support", "%value%", bedrockValue));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Sprache", "%value%", configManager.config().getString("language.default", "de")));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Debug-Datei", "%value%", diagnosticLogger.isEnabled() ? diagnosticLogger.debugFile().toString() : "deaktiviert"));
     }

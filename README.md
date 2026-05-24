@@ -19,13 +19,13 @@ mvn package
 Die fertige Plugin-Datei liegt danach hier:
 
 ```text
-target/Craftplay-Rubbellose-0.3.0.jar
+target/Craftplay-Rubbellose-0.3.1.jar
 ```
 
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.0.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.1.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein Economy-Plugin installieren, falls noch nicht vorhanden.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.
@@ -105,6 +105,10 @@ Wenn PlaceholderAPI installiert ist, werden diese Platzhalter registriert:
 - Pity-System gegen lange Pechstrassen.
 - Risiko-Spiel fuer den letzten Geldgewinn.
 - Spieler koennen eigene Lose per `/rubbellos gift` verschenken.
+
+## Bedrock/Geyser
+
+Falls der Bedrock-Client Slash-Commands mit einer Cheat-Meldung blockiert, kann das Plugin Bedrock-Spielern automatisch ein `Rubellos-Menue`-Item geben. Der Rechtsklick auf dieses PDC-markierte Item oeffnet den Shop ohne Command. Die Funktion ist in `config.yml` unter `bedrock_support` einstellbar und erkennt Geyser/Floodgate per API oder alternativ ueber Namensprefixe wie `.` und `*`.
 
 ## Sicherheitslogik
 

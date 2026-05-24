@@ -9,7 +9,7 @@
 | Bereich | Details |
 | --- | --- |
 | Plugin | Craftplay-Rubbellose |
-| Version | 0.3.1 |
+| Version | 0.3.2 |
 | Server | Paper/Purpur 1.21.x |
 | Java | Java 21 |
 | Wirtschaft | Vault + Economy-Plugin |
@@ -32,7 +32,7 @@
 - Admin-Befehle fuer Reload, Diagnose, Give und offene Lose
 - Daily-Los, Lucky Hour, Streaks, Serien, Eventlose und Mystery-Multiplikator
 - Rubellos-Pass, taegliche Quests, Serverziele, Gruppenziele, Pity-System und Risiko-Spiel
-- Bedrock/Geyser-kompatibles Shop-Menue-Item ohne Slash-Command
+- Bedrock/Geyser-kompatible Command-Registrierung ohne Inventar-Item
 
 ## So Funktioniert Es
 
@@ -119,7 +119,7 @@ Die Lose und Belohnungen werden in `rewards.yml` konfiguriert. Chancen werden ge
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.1.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.2.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein kompatibles Economy-Plugin installieren.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.
@@ -148,7 +148,7 @@ Danach werden Host, Port, Datenbankname, Benutzername und Passwort im MySQL-Bloc
 
 ## Bedrock Und Geyser
 
-Wenn Bedrock-Clients Slash-Commands blockieren und eine Cheat-Meldung anzeigen, kann das Plugin Bedrock-Spielern automatisch ein `Rubellos-Menue`-Item geben. Der Rechtsklick oeffnet den Shop direkt serverseitig. Die Funktion wird in `config.yml` unter `bedrock_support` konfiguriert und erkennt Spieler ueber Geyser/Floodgate oder Namensprefixe.
+Bedrock-Spieler nutzen dieselben Befehle wie Java-Spieler. `/rubbellos` wird zusaetzlich ueber Papers Brigadier-Command-System registriert, damit Geyser den Command sauber an Bedrock-Clients ausliefern kann. Es gibt kein festes Menue-Item im Inventar; nur gekaufte oder erhaltene Rubellose landen dort.
 
 ## Sicherheit Und Persistenz
 

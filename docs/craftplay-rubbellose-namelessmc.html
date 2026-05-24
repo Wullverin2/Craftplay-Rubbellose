@@ -25,7 +25,7 @@ NamelessMC Wiki-Version
   <tbody>
     <tr><th>Bereich</th><th>Details</th></tr>
     <tr><td>Plugin</td><td>Craftplay-Rubbellose</td></tr>
-    <tr><td>Version</td><td>0.3.1</td></tr>
+    <tr><td>Version</td><td>0.3.2</td></tr>
     <tr><td>Server</td><td>Paper/Purpur 1.21.x</td></tr>
     <tr><td>Java</td><td>Java 21</td></tr>
     <tr><td>Wirtschaft</td><td>Vault + Economy-Plugin</td></tr>
@@ -51,7 +51,7 @@ NamelessMC Wiki-Version
   <li>Admin-Befehle fuer Reload, Diagnose, Give und offene Lose</li>
   <li>Daily-Los, Lucky Hour, Streaks, Serien, Eventlose und Mystery-Multiplikator</li>
   <li>Rubellos-Pass, taegliche Auftraege, Serverziele, Gruppenziele, Pity-System und Risiko-Spiel</li>
-  <li>Bedrock/Geyser-kompatibles Shop-Menue-Item ohne Slash-Command</li>
+  <li>Bedrock/Geyser-kompatible Command-Registrierung ohne Inventar-Item</li>
 </ul>
 
 <h2>So Funktioniert Es</h2>
@@ -183,7 +183,7 @@ NamelessMC Wiki-Version
 
 <ol>
   <li>Server stoppen.</li>
-  <li><code>Craftplay-Rubbellose-0.3.1.jar</code> in den <code>plugins</code>-Ordner kopieren.</li>
+  <li><code>Craftplay-Rubbellose-0.3.2.jar</code> in den <code>plugins</code>-Ordner kopieren.</li>
   <li>Vault und ein kompatibles Economy-Plugin installieren.</li>
   <li>Server starten.</li>
   <li>Dateien in <code>plugins/Craftplay-Rubbellose/</code> anpassen.</li>
@@ -217,10 +217,9 @@ NamelessMC Wiki-Version
 <h2>Bedrock Und Geyser</h2>
 
 <p>
-  Wenn Bedrock-Clients Slash-Commands blockieren und eine Cheat-Meldung anzeigen, kann das Plugin Bedrock-Spielern
-  automatisch ein <code>Rubellos-Menue</code>-Item geben. Der Rechtsklick oeffnet den Shop direkt serverseitig.
-  Die Funktion wird in <code>config.yml</code> unter <code>bedrock_support</code> konfiguriert und erkennt Spieler
-  ueber Geyser/Floodgate oder Namensprefixe.
+  Bedrock-Spieler nutzen dieselben Befehle wie Java-Spieler. <code>/rubbellos</code> wird zusaetzlich ueber
+  Papers Brigadier-Command-System registriert, damit Geyser den Command sauber an Bedrock-Clients ausliefern kann.
+  Es gibt kein festes Menue-Item im Inventar; nur gekaufte oder erhaltene Rubellose landen dort.
 </p>
 
 <h2>Sicherheit Und Persistenz</h2>

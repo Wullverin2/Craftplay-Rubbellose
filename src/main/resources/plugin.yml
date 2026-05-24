@@ -1,9 +1,9 @@
 name: Craftplay-Rubbellose
 main: de.craftplay.scratchcards.CraftplayScratchcardsPlugin
-version: 0.3.1
+version: 0.3.2
 api-version: "1.21"
 author: Wullverin
-softdepend: [Vault, PlaceholderAPI, floodgate, Geyser-Spigot]
+softdepend: [Vault, PlaceholderAPI]
 commands:
   rubbellos:
     description: Oeffnet den Rubellos-Shop oder verwaltet Rubellose.

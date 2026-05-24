@@ -12,15 +12,16 @@ import de.craftplay.scratchcards.listener.GuiListener;
 import de.craftplay.scratchcards.listener.PlayerListener;
 import de.craftplay.scratchcards.papi.CpscPlaceholderExpansion;
 import de.craftplay.scratchcards.service.PurchaseService;
-import de.craftplay.scratchcards.service.BedrockSupportService;
 import de.craftplay.scratchcards.service.FeedbackService;
 import de.craftplay.scratchcards.service.FeatureService;
 import de.craftplay.scratchcards.service.ProgressionService;
 import de.craftplay.scratchcards.service.RewardManager;
 import de.craftplay.scratchcards.service.ScratchcardItemFactory;
 import de.craftplay.scratchcards.service.ScratchcardSessionManager;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.List;
 import java.util.logging.Level;
 
 public final class CraftplayScratchcardsPlugin extends JavaPlugin {
@@ -37,7 +38,6 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
     private FeatureService featureService;
     private ProgressionService progressionService;
     private ScratchcardSessionManager sessionManager;
-    private BedrockSupportService bedrockSupportService;
     private CpscPlaceholderExpansion placeholderExpansion;
 
     @Override
@@ -65,7 +65,6 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
             feedbackService = new FeedbackService(configManager);
             featureService = new FeatureService(configManager, languageManager, databaseManager, economyManager);
             progressionService = new ProgressionService(configManager, languageManager, databaseManager, economyManager);
-            bedrockSupportService = new BedrockSupportService(this, configManager, languageManager, diagnosticLogger);
             guiManager = new GuiManager(configManager, rewardManager, databaseManager, itemFactory, featureService, progressionService);
             purchaseService = new PurchaseService(configManager, languageManager, databaseManager, economyManager, itemFactory, feedbackService, featureService, progressionService);
             sessionManager = new ScratchcardSessionManager(this, configManager, languageManager, databaseManager,
@@ -112,18 +111,38 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
 
     private void registerCommands() {
         ScratchcardCommand command = new ScratchcardCommand(this::reloadRuntimeConfiguration, getDescription().getVersion(), configManager,
-                languageManager, diagnosticLogger, economyManager, rewardManager, purchaseService, sessionManager, guiManager, databaseManager, featureService, progressionService, itemFactory, bedrockSupportService);
+                languageManager, diagnosticLogger, economyManager, rewardManager, purchaseService, sessionManager, guiManager, databaseManager, featureService, progressionService, itemFactory);
         CommandMapRepair commandMapRepair = new CommandMapRepair(this, diagnosticLogger);
         commandMapRepair.unregisterLegacy("rubellos");
-        commandMapRepair.registerOrRepair("rubbellos", command, command);
-        commandMapRepair.registerOrRepair("scratchcard", command, command);
-        commandMapRepair.registerOrRepair("cpscratchdiag", command, command);
+        registerPluginCommand("rubbellos", command);
+        registerPluginCommand("scratchcard", command);
+        registerPluginCommand("cpscratchdiag", command);
+        registerPaperCommand("rubbellos", "Oeffnet den Rubellos-Shop oder verwaltet Rubellose.", command);
+        registerPaperCommand("scratchcard", "Opens the scratchcard shop or manages scratchcards.", command);
+        registerPaperCommand("cpscratchdiag", "Zeigt Diagnoseinformationen zur geladenen Craftplay-Rubbellose-Version.", command);
+        commandMapRepair.syncCommands();
+    }
+
+    private void registerPluginCommand(String name, ScratchcardCommand command) {
+        PluginCommand pluginCommand = getCommand(name);
+        if (pluginCommand == null) {
+            diagnosticLogger.warning("Command /" + name + " wurde nicht in plugin.yml gefunden.", null);
+            return;
+        }
+        pluginCommand.setExecutor(command);
+        pluginCommand.setTabCompleter(command);
+        diagnosticLogger.info("Command /" + name + " wurde ueber plugin.yml registriert.");
+    }
+
+    private void registerPaperCommand(String name, String description, ScratchcardCommand command) {
+        registerCommand(name, description, List.of(), new PaperScratchcardCommand(name, command, diagnosticLogger));
+        diagnosticLogger.info("Command /" + name + " wurde fuer Paper/Brigadier registriert.");
     }
 
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(economyManager, this);
         getServer().getPluginManager().registerEvents(new PlayerListener(itemFactory, sessionManager, databaseManager,
-                languageManager, diagnosticLogger, configManager, purchaseService, guiManager, bedrockSupportService), this);
+                languageManager, diagnosticLogger, configManager, purchaseService), this);
         getServer().getPluginManager().registerEvents(new GuiListener(rewardManager, purchaseService, sessionManager, guiManager, languageManager, diagnosticLogger), this);
     }
 

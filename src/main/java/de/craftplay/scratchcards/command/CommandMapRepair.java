@@ -150,7 +150,7 @@ public final class CommandMapRepair {
         throw new NoSuchFieldException(fieldName);
     }
 
-    private void syncCommands() {
+    public void syncCommands() {
         try {
             Method method = Bukkit.getServer().getClass().getMethod("syncCommands");
             method.invoke(Bukkit.getServer());

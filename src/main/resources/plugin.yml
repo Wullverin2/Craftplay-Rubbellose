@@ -1,6 +1,6 @@
 name: Craftplay-Rubbellose
 main: de.craftplay.scratchcards.CraftplayScratchcardsPlugin
-version: 0.3.4
+version: 0.3.5
 api-version: "1.21"
 author: Wullverin
 softdepend: [Vault, PlaceholderAPI]

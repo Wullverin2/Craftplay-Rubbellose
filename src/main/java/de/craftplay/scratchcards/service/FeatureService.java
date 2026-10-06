@@ -165,38 +165,6 @@ public final class FeatureService {
         }
     }
 
-    public void handleServerGoal() {
-        if (!configManager.config().getBoolean("server_goal.enabled", true)) {
-            return;
-        }
-        String goalId = configManager.config().getString("server_goal.id", "default").toLowerCase(Locale.ROOT);
-        if (databaseManager.isServerGoalCompleted(goalId)) {
-            return;
-        }
-        long opened = databaseManager.countTotalOpens();
-        long target = Math.max(1L, configManager.config().getLong("server_goal.target_opens", 500L));
-        if (opened < target) {
-            return;
-        }
-        databaseManager.markServerGoalCompleted(goalId, opened);
-        double rewardMoney = configManager.config().getDouble("server_goal.reward_money_online", 0.0D);
-        for (Player online : Bukkit.getOnlinePlayers()) {
-            if (rewardMoney > 0.0D) {
-                economyManager.deposit(online, rewardMoney);
-            }
-            languageManager.send(online, "server_goal_completed", TextUtil.placeholders(
-                    "%opened%", String.valueOf(opened),
-                    "%target%", String.valueOf(target),
-                    "%money%", economyManager.format(rewardMoney)
-            ));
-        }
-        for (String command : configManager.config().getStringList("server_goal.commands")) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command
-                    .replace("%opened%", String.valueOf(opened))
-                    .replace("%target%", String.valueOf(target)));
-        }
-    }
-
     public boolean isTypeAvailable(ScratchcardType type) {
         return type.isActive(System.currentTimeMillis());
     }

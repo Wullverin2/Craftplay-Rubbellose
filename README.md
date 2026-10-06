@@ -19,13 +19,13 @@ mvn package
 Die fertige Plugin-Datei liegt danach hier:
 
 ```text
-target/Craftplay-Rubbellose-0.3.4.jar
+target/Craftplay-Rubbellose-0.3.5.jar
 ```
 
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.4.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.5.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein Economy-Plugin installieren, falls noch nicht vorhanden.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.
@@ -100,7 +100,7 @@ Wenn PlaceholderAPI installiert ist, werden diese Platzhalter registriert:
 - Streak-System fuer regelmaessiges Oeffnen.
 - Rubellos-Serien mit Sammelfortschritt und Abschlussbelohnung.
 - Eventlose mit optionalem Ablaufdatum.
-- Serverziel und Gruppenziele mit Belohnungen fuer alle.
+- Gruppenziele mit Belohnungen für alle.
 - Rubellos-Pass mit XP, Leveln und Belohnungen.
 - Taegliche Quests fuer Spieler.
 - Mystery-Multiplikator fuer Geldgewinne.
@@ -123,6 +123,8 @@ Geld, Inventarplatz, Tageskauflimit und Besitzlimit muessen fuer die gesamte Men
 Das bisherige `limits.max_opens_per_day` wird beim Start oder `/rubbellos reload` automatisch entfernt. Alle vorhandenen Lose koennen ohne Tages-Oeffnungslimit geoeffnet werden; Cooldown und Schutz vor mehreren gleichzeitig laufenden Losen bleiben erhalten. Bestehende eigene Einstellungen bleiben erhalten, neue Kaufoptionen werden automatisch ergaenzt.
 
 ## Sicherheitslogik
+
+Das frühere Serverziel mit Online-Bonus wurde ab Version 0.3.5 vollständig entfernt. Beim Start oder Reload werden `server_goal` sowie die zugehörigen Sprachtexte aus vorhandenen Dateien entfernt. Bereits ausgezahlte Coins und vorhandene Datenbankdaten werden nicht verändert. Gruppenziele sind eine separate Funktion und bleiben unverändert.
 
 - Rubellose werden ueber den `PersistentDataContainer` markiert.
 - Umbenanntes Papier wird nicht akzeptiert.

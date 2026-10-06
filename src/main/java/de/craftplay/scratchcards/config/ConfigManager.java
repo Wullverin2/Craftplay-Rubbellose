@@ -53,11 +53,11 @@ public final class ConfigManager {
     }
 
     private void syncExistingFiles() {
-        syncFile("config.yml", List.of("limits.max_purchases_per_hour", "limits.max_opens_per_day", "bedrock_support"));
+        syncFile("config.yml", List.of("limits.max_purchases_per_hour", "limits.max_opens_per_day", "bedrock_support", "server_goal"));
         syncFile("gui.yml", List.of());
         syncFile("rewards.yml", List.of());
-        syncFile("language_de.yml", List.of("bedrock_shop_opener_given", "open_limit_day"));
-        syncFile("language_en.yml", List.of("bedrock_shop_opener_given", "open_limit_day"));
+        syncFile("language_de.yml", List.of("bedrock_shop_opener_given", "open_limit_day", "server_goal_completed"));
+        syncFile("language_en.yml", List.of("bedrock_shop_opener_given", "open_limit_day", "server_goal_completed"));
     }
 
     private void syncFile(String name, List<String> obsoletePaths) {

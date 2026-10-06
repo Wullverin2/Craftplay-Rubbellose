@@ -144,4 +144,38 @@ class ConfigManagerTest {
         assertEquals("Mein eigener Text fuer Spieler", configs.language().getString("daily_disabled"));
         assertEquals(1, configs.language().getStringList("help").stream().filter(line -> line.contains("/rubbellos daily")).count());
     }
+
+    @Test
+    void removesServerGoalAndItsMessagesFromExistingFilesWithoutChangingOtherSettings() throws Exception {
+        YamlConfiguration config = new YamlConfiguration();
+        config.set("server_goal.enabled", true);
+        config.set("server_goal.id", "custom_goal");
+        config.set("server_goal.target_opens", 1);
+        config.set("server_goal.reward_money_online", 2500);
+        config.set("server_goal.commands", List.of("broadcast Old server goal"));
+        config.set("limits.max_purchases_per_day", 10);
+        config.set("group_goals.goals.open_100.target", 750);
+        config.save(directory.resolve("config.yml").toFile());
+        for (String name : List.of("language_de.yml", "language_en.yml")) {
+            YamlConfiguration language = new YamlConfiguration();
+            language.set("server_goal_completed", "Old online bonus message");
+            language.set("reward_win", "My custom prize message");
+            language.save(directory.resolve(name).toFile());
+        }
+
+        configs.load();
+
+        assertFalse(configs.config().contains("server_goal"));
+        assertEquals(10, configs.config().getInt("limits.max_purchases_per_day"));
+        assertEquals(750, configs.config().getInt("group_goals.goals.open_100.target"));
+        for (String name : List.of("language_de.yml", "language_en.yml")) {
+            YamlConfiguration language = YamlConfiguration.loadConfiguration(directory.resolve(name).toFile());
+            assertFalse(language.contains("server_goal_completed"));
+            assertEquals("My custom prize message", language.getString("reward_win"));
+        }
+        String afterFirstLoad = Files.readString(directory.resolve("config.yml"));
+        configs.load();
+        assertEquals(afterFirstLoad, Files.readString(directory.resolve("config.yml")));
+        assertFalse(configs.config().contains("server_goal"));
+    }
 }

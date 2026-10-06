@@ -130,11 +130,6 @@ public final class DatabaseManager {
                 + "series_id VARCHAR(64) NOT NULL,"
                 + "claimed_at BIGINT NOT NULL"
                 + ")");
-        execute("CREATE TABLE IF NOT EXISTS " + table("server_goals") + " ("
-                + "goal_id VARCHAR(64) PRIMARY KEY,"
-                + "opened_count BIGINT NOT NULL,"
-                + "completed_at BIGINT NOT NULL"
-                + ")");
         execute("CREATE TABLE IF NOT EXISTS " + table("pass_progress") + " ("
                 + "uuid VARCHAR(36) NOT NULL,"
                 + "player_name VARCHAR(32) NOT NULL,"
@@ -657,35 +652,6 @@ public final class DatabaseManager {
         } catch (SQLException exception) {
             log(Level.SEVERE, "Gesamtzahl geoeffneter Lose konnte nicht gelesen werden", exception);
             return 0L;
-        }
-    }
-
-    public synchronized boolean isServerGoalCompleted(String goalId) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT goal_id FROM " + table("server_goals") + " WHERE goal_id = ?")) {
-            statement.setString(1, goalId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next();
-            }
-        } catch (SQLException exception) {
-            log(Level.SEVERE, "Serverziel konnte nicht gelesen werden", exception);
-            return false;
-        }
-    }
-
-    public synchronized void markServerGoalCompleted(String goalId, long openedCount) {
-        if (isServerGoalCompleted(goalId)) {
-            return;
-        }
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO " + table("server_goals")
-                     + " (goal_id, opened_count, completed_at) VALUES (?, ?, ?)")) {
-            statement.setString(1, goalId);
-            statement.setLong(2, openedCount);
-            statement.setLong(3, System.currentTimeMillis());
-            statement.executeUpdate();
-        } catch (SQLException exception) {
-            log(Level.SEVERE, "Serverziel konnte nicht gespeichert werden", exception);
         }
     }
 

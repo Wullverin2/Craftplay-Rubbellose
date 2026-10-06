@@ -82,4 +82,41 @@ class DatabaseManagerTest {
         assertEquals(2, database.getPlayerStats(uuid, "Player").bought());
         assertEquals(1000, database.getServerStats(10).totalIncome());
     }
+
+    @Test
+    void newDatabaseDoesNotCreateServerGoalsTableButKeepsStatisticsAndGroupGoals() throws Exception {
+        try (var connection = DriverManager.getConnection("jdbc:sqlite:" + directory.resolve("scratchcards.db"));
+             var statement = connection.createStatement();
+             var tables = statement.executeQuery("SELECT name FROM sqlite_master WHERE type = 'table'")) {
+            java.util.Set<String> names = new java.util.HashSet<>();
+            while (tables.next()) {
+                names.add(tables.getString("name"));
+            }
+            assertFalse(names.contains("cpsc_server_goals"));
+            assertTrue(names.contains("cpsc_group_goals"));
+            assertTrue(names.contains("cpsc_player_stats"));
+            assertTrue(names.contains("cpsc_opens"));
+        }
+    }
+
+    @Test
+    void existingServerGoalHistoryAndPlayerStatisticsAreNotDeletedOnStartup() throws Exception {
+        assertTrue(database.recordPurchases(uuid, "Player", "small", 500, 2));
+        try (var connection = DriverManager.getConnection("jdbc:sqlite:" + directory.resolve("scratchcards.db"));
+             var statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE cpsc_server_goals (goal_id VARCHAR(64) PRIMARY KEY, opened_count BIGINT, completed_at BIGINT)");
+            statement.execute("INSERT INTO cpsc_server_goals VALUES ('old_goal', 500, 1)");
+        }
+        database.close();
+        database.initialize();
+
+        try (var connection = DriverManager.getConnection("jdbc:sqlite:" + directory.resolve("scratchcards.db"));
+             var statement = connection.createStatement();
+             var result = statement.executeQuery("SELECT opened_count FROM cpsc_server_goals WHERE goal_id = 'old_goal'")) {
+            assertTrue(result.next());
+            assertEquals(500, result.getLong(1));
+        }
+        assertEquals(2, database.getPlayerStats(uuid, "Player").bought());
+        assertEquals(1000, database.getServerStats(10).totalIncome());
+    }
 }

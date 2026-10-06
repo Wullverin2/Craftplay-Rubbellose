@@ -203,14 +203,6 @@ series:
           - "crate key give %player% epic 1"
         broadcast: true
 
-server_goal:
-  enabled: true
-  id: "goal_500_opens"
-  target_opens: 500
-  reward_money_online: 2500
-  commands:
-    - "broadcast Das Rubellos-Serverziel wurde erreicht!"
-
 pass:
   enabled: true
   season_id: "season_1"

@@ -292,7 +292,6 @@ public final class ScratchcardSessionManager {
         activeSessions.remove(player.getUniqueId());
         guiManager.refreshScratchcard(session);
         featureService.handleSeries(player, session.type(), reward);
-        featureService.handleServerGoal();
         progressionService.updatePity(player, session.type().id(), reward.isWin());
         if (reward.isWin()) {
             progressionService.onWin(player, reward.broadcast());

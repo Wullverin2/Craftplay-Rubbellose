@@ -9,7 +9,7 @@
 | Bereich | Details |
 | --- | --- |
 | Plugin | Craftplay-Rubbellose |
-| Version | 0.3.4 |
+| Version | 0.3.5 |
 | Server | Paper/Purpur 1.21.x |
 | Java | Java 21 |
 | Wirtschaft | Vault + Economy-Plugin |
@@ -32,7 +32,7 @@
 - PlaceholderAPI-Unterstuetzung fuer externe Anzeigen
 - Admin-Befehle fuer Reload, Diagnose, Give und offene Lose
 - Daily-Los, Lucky Hour, Streaks, Serien, Eventlose und Mystery-Multiplikator
-- Rubellos-Pass, taegliche Quests, Serverziele, Gruppenziele, Pity-System und Risiko-Spiel
+- Rubellos-Pass, tägliche Quests, Gruppenziele, Pity-System und Risiko-Spiel
 - Bedrock/Geyser-kompatible Command-Registrierung ohne Inventar-Item
 
 ## So Funktioniert Es
@@ -123,7 +123,7 @@ Die Lose und Belohnungen werden in `rewards.yml` konfiguriert. Chancen werden ge
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.4.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.5.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein kompatibles Economy-Plugin installieren.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.

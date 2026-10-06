@@ -300,9 +300,9 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Geladene Typen", "%value%", String.valueOf(rewardManager.types().size())));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Aktive Sessions", "%value%", String.valueOf(sessionManager.activeSessionCount())));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Offene DB-Lose", "%value%", String.valueOf(databaseManager.countPendingScratchcards())));
-        languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Geoeffnete Lose gesamt", "%value%", String.valueOf(databaseManager.countTotalOpens())));
+        languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Geöffnete Lose gesamt", "%value%", String.valueOf(databaseManager.countTotalOpens())));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Limits", "%value%", String.valueOf(configManager.config().getBoolean("limits.enabled", true))));
-        languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Kaeufe pro Tag", "%value%", String.valueOf(configManager.config().getInt("limits.max_purchases_per_day", 25))));
+        languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Käufe pro Tag", "%value%", String.valueOf(configManager.config().getInt("limits.max_purchases_per_day", 25))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Maximale Kaufmenge", "%value%", String.valueOf(configManager.config().getInt("purchases.max_amount_per_purchase", 64))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Besitzlimit", "%value%", String.valueOf(configManager.config().getInt("limits.max_owned_scratchcards", 64))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Daily-Los", "%value%", configManager.config().getBoolean("daily.enabled", true)
@@ -571,7 +571,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
             }
             if (args.length == 3 && args[0].equalsIgnoreCase("buy")) {
                 int maxAmount = Math.max(1, configManager.config().getInt("purchases.max_amount_per_purchase", 64));
-                return filter(List.of(1, 5, 10, 25, 64).stream().filter(amount -> amount <= maxAmount)
+                return filter(List.of(1, 5, 10).stream().filter(amount -> amount <= maxAmount)
                         .map(String::valueOf).toList(), args[2]);
             }
             if (args.length == 2 && (args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("gift"))) {

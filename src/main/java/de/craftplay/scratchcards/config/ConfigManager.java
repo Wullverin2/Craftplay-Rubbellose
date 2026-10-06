@@ -66,10 +66,14 @@ public final class ConfigManager {
             YamlConfiguration current = YamlConfiguration.loadConfiguration(file);
             YamlConfiguration defaults = YamlConfiguration.loadConfiguration(reader);
             boolean changed = addMissingValues(current, defaults);
+            if (name.equals("config.yml")) {
+                changed = migrateGermanDefaultTexts(current, defaults) || changed;
+            }
             if (name.equals("gui.yml") || name.equals("language_de.yml")) {
                 changed = replaceTextValue(current, "/rubellos", "/rubbellos") || changed;
             }
             if (name.equals("gui.yml")) {
+                changed = migrateShopAmounts(current) || changed;
                 changed = replaceTextValue(current, "%daily_opened%/%daily_open_limit%", "%daily_opened%") || changed;
                 changed = replaceTextValue(current, "%daily_open_limit%", "-") || changed;
                 changed = replaceTextValue(current, "%daily_open_remaining%", "-") || changed;
@@ -78,6 +82,7 @@ public final class ConfigManager {
                 changed = replaceExactValue(current, "shop.card_item.reward_chance_line",
                         "&8- &f%reward%&7: &e%chance%%",
                         "&8- &f%reward% &7[%rarity%&7]: &e%chance%%") || changed;
+                changed = migrateGermanDefaultTexts(current, defaults) || changed;
                 changed = mergeMissingListEntries(current, defaults, "shop.card_item.lore") || changed;
                 changed = mergeMissingListEntries(current, defaults, "shop.info.lore") || changed;
             }
@@ -92,6 +97,9 @@ public final class ConfigManager {
                                 ? "%prefix%&cDu hast dein Tageslimit erreicht. &7Heute: &e%daily_bought%/%daily_limit%&7. Es wird um Mitternacht zurückgesetzt."
                                 : "%prefix%&cYou reached your daily purchase limit. &7Today: &e%daily_bought%/%daily_limit%&7. It resets at midnight.",
                         defaults.getString("purchase_limit_day")) || changed;
+                if (german) {
+                    changed = migrateGermanDefaultTexts(current, defaults) || changed;
+                }
                 changed = mergeMissingListEntries(current, defaults, "help") || changed;
             }
             for (String path : obsoletePaths) {
@@ -138,6 +146,58 @@ public final class ConfigManager {
         }
         current.set(path, newValue);
         return true;
+    }
+
+    private boolean migrateShopAmounts(YamlConfiguration current) {
+        String path = "shop.quantity_selector";
+        List<Integer> amounts = current.getIntegerList(path + ".amounts");
+        if (!amounts.equals(List.of(1, 5, 10, 25, 64))) {
+            return false;
+        }
+        List<Integer> slots = current.getIntegerList(path + ".slots");
+        current.set(path + ".amounts", List.of(1, 5, 10));
+        // Die ersten drei Mengen behalten ihre bisherigen, eventuell angepassten Slots.
+        current.set(path + ".slots", new ArrayList<>(slots.subList(0, Math.min(3, slots.size()))));
+        return true;
+    }
+
+    private boolean migrateGermanDefaultTexts(YamlConfiguration current, YamlConfiguration defaults) {
+        boolean changed = false;
+        // Nur bekannte Standardtexte korrigieren, keine eigenen Texte oder technischen Schluessel.
+        for (String path : defaults.getKeys(true)) {
+            Object defaultValue = defaults.get(path);
+            if (defaultValue instanceof String text) {
+                String legacyText = withoutUmlauts(text);
+                if (!legacyText.equals(text)) {
+                    changed = replaceExactValue(current, path, legacyText, text) || changed;
+                }
+            } else if (defaultValue instanceof List<?>) {
+                List<String> texts = new ArrayList<>(current.getStringList(path));
+                boolean listChanged = false;
+                for (String text : defaults.getStringList(path)) {
+                    String legacyText = withoutUmlauts(text);
+                    if (legacyText.equals(text)) {
+                        continue;
+                    }
+                    for (int index = 0; index < texts.size(); index++) {
+                        if (texts.get(index).equals(legacyText)) {
+                            texts.set(index, text);
+                            listChanged = true;
+                        }
+                    }
+                }
+                if (listChanged) {
+                    current.set(path, texts);
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
+    private String withoutUmlauts(String text) {
+        return text.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
+                .replace("Ä", "Ae").replace("Ö", "Oe").replace("Ü", "Ue").replace("ß", "ss");
     }
 
     private boolean mergeMissingListEntries(YamlConfiguration current, YamlConfiguration defaults, String path) {

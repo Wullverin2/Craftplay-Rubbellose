@@ -9,7 +9,7 @@
 | Bereich | Details |
 | --- | --- |
 | Plugin | Craftplay-Rubbellose |
-| Version | 0.3.3 |
+| Version | 0.3.4 |
 | Server | Paper/Purpur 1.21.x |
 | Java | Java 21 |
 | Wirtschaft | Vault + Economy-Plugin |
@@ -47,7 +47,7 @@ Beim Oeffnen wird das Ergebnis sofort serverseitig berechnet und gespeichert. Da
 
 ![Craftplay Rubbellose Shop-GUI](wiki-assets/gui-shop.png)
 
-Im Shop werden die verfuegbaren Rubellos-Typen angezeigt. Jedes Los zeigt Einzelpreis, ausgewaehlte Menge, Gesamtpreis, Gewinnchance und moegliche Gewinne. Zuerst die Menge (1, 5, 10, 25 oder 64) auswaehlen, dann den Lostyp anklicken. Die Statistik in der Mitte informiert ueber gekaufte und geoeffnete Lose, Tageskauflimit und Besitzlimit. Ein Mehrfachkauf erfolgt nur, wenn Geld, Platz und verbleibende Limits fuer alle Lose reichen. Jedes Los zaehlt einzeln zum Kauflimit.
+Im Shop werden die verfügbaren Rubellos-Typen angezeigt. Jedes Los zeigt Einzelpreis, ausgewählte Menge, Gesamtpreis, Gewinnchance und mögliche Gewinne. Zuerst die Menge (1, 5 oder 10) auswählen, dann den Lostyp anklicken. Die Statistik in der Mitte informiert über gekaufte und geöffnete Lose, Tageskauflimit und Besitzlimit. Ein Mehrfachkauf erfolgt nur, wenn Geld, Platz und verbleibende Limits für alle Lose reichen. Jedes Los zählt einzeln zum Kauflimit.
 
 Mengen und Slots stehen in `gui.yml` unter `shop.quantity_selector`. `purchases.max_amount_per_purchase` in `config.yml` begrenzt die Menge pro Kauf. Das alte `limits.max_opens_per_day` wird automatisch entfernt; Oeffnungs-Cooldown und Schutz vor gleichzeitig laufenden Losen bleiben bestehen.
 
@@ -123,7 +123,7 @@ Die Lose und Belohnungen werden in `rewards.yml` konfiguriert. Chancen werden ge
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.3.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.4.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein kompatibles Economy-Plugin installieren.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.

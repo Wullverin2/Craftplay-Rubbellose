@@ -111,7 +111,7 @@ feedback:
     lose:
       enabled: true
       title: "&7Niete"
-      subtitle: "&fVielleicht beim naechsten Los"
+      subtitle: "&fVielleicht beim nächsten Los"
       fade_in_ticks: 10
       stay_ticks: 35
       fade_out_ticks: 10
@@ -125,9 +125,9 @@ feedback:
 
 rarities:
   common:
-    display_name: "&7Gewoehnlich"
+    display_name: "&7Gewöhnlich"
   uncommon:
-    display_name: "&aUngewoehnlich"
+    display_name: "&aUngewöhnlich"
   rare:
     display_name: "&9Selten"
   epic:
@@ -250,7 +250,7 @@ quests:
         commands: []
     open_5:
       enabled: true
-      display_name: "&aOeffne 5 Lose"
+      display_name: "&aÖffne 5 Lose"
       event: open
       target: 5
       reward:
@@ -275,7 +275,7 @@ group_goals:
   goals:
     daily_opens:
       enabled: true
-      display_name: "&6Gemeinsam 100 Lose oeffnen"
+      display_name: "&6Gemeinsam 100 Lose öffnen"
       event: open
       target: 100
       reward:

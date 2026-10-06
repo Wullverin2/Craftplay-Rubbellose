@@ -19,13 +19,13 @@ mvn package
 Die fertige Plugin-Datei liegt danach hier:
 
 ```text
-target/Craftplay-Rubbellose-0.3.3.jar
+target/Craftplay-Rubbellose-0.3.4.jar
 ```
 
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.3.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.4.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein Economy-Plugin installieren, falls noch nicht vorhanden.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.
@@ -114,7 +114,7 @@ Bedrock-Spieler nutzen dieselben Befehle wie Java-Spieler. `/rubbellos` wird zus
 
 ## Mehrere Lose kaufen
 
-Im Shop zuerst die Menge (standardmaessig 1, 5, 10, 25 oder 64) auswaehlen, dann den gewuenschten Lostyp anklicken. Der Lostyp zeigt Einzelpreis, ausgewaehlte Menge und Gesamtpreis an. Alternativ kauft `/rubbellos buy small 5` direkt fuenf kleine Lose.
+Im Shop zuerst die Menge (standardmäßig 1, 5 oder 10) auswählen, dann den gewünschten Lostyp anklicken. Der Lostyp zeigt Einzelpreis, ausgewählte Menge und Gesamtpreis an. Alternativ kauft `/rubbellos buy small 5` direkt fünf kleine Lose. Die bisherigen Standardbuttons für 25 und 64 Lose werden beim Start oder Reload auch aus vorhandenen GUI-Dateien entfernt; dein eingestelltes Tageskauflimit bleibt unverändert.
 
 `purchases.max_amount_per_purchase` in `config.yml` begrenzt die Menge pro Kauf (Standard: 64). Mengen, Slots und Anzeigen stehen in `gui.yml` unter `shop.quantity_selector`; die Platzhalter `%amount%`, `%unit_price%` und `%total_price%` stehen fuer Kaufmenge, Einzelpreis und Gesamtpreis. `shop.quantity_selector.enabled: false` deaktiviert die Mengenauswahl im GUI, nicht den Kaufbefehl.
 

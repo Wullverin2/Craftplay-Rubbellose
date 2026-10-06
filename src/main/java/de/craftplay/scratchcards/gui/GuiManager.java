@@ -271,7 +271,7 @@ public final class GuiManager {
                 "%daily_remaining%", purchaseLimit > 0 ? String.valueOf(Math.max(0, purchaseLimit - boughtToday)) : "-",
                 "%daily_opened%", String.valueOf(openedToday),
                 "%daily_available%", dailyAvailable ? "Ja" : "Nein",
-                "%daily_status%", dailyAvailable ? "Verfuegbar" : "Abgeholt",
+                "%daily_status%", dailyAvailable ? "Verfügbar" : "Abgeholt",
                 "%owned%", String.valueOf(owned),
                 "%owned_limit%", ownedLimit > 0 ? String.valueOf(ownedLimit) : "-",
                 "%owned_remaining%", ownedLimit > 0 ? String.valueOf(Math.max(0, ownedLimit - owned)) : "-"

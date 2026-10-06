@@ -117,7 +117,7 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
         registerPluginCommand("rubbellos", command);
         registerPluginCommand("scratchcard", command);
         registerPluginCommand("cpscratchdiag", command);
-        registerPaperCommand("rubbellos", "Oeffnet den Rubellos-Shop oder verwaltet Rubellose.", command);
+        registerPaperCommand("rubbellos", "Öffnet den Rubellos-Shop oder verwaltet Rubellose.", command);
         registerPaperCommand("scratchcard", "Opens the scratchcard shop or manages scratchcards.", command);
         registerPaperCommand("cpscratchdiag", "Zeigt Diagnoseinformationen zur geladenen Craftplay-Rubbellose-Version.", command);
         commandMapRepair.syncCommands();

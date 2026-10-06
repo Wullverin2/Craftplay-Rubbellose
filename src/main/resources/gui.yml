@@ -28,8 +28,8 @@ shop:
     - "&cDieses Rubellos ist aktuell nicht kaufbar."
   quantity_selector:
     enabled: true
-    amounts: [1, 5, 10, 25, 64]
-    slots: [18, 19, 20, 24, 25]
+    amounts: [1, 5, 10]
+    slots: [18, 19, 20]
     item:
       material: PAPER
       name: "&e%amount%x"
@@ -39,7 +39,7 @@ shop:
       material: LIME_DYE
       name: "&a%amount%x"
       lore:
-        - "&aAusgewaehlt"
+        - "&aAusgewählt"
   info:
     slot: 22
     material: BOOK
@@ -50,8 +50,8 @@ shop:
       - "&7Gewonnen: &e%cpsc_won_money%"
       - "&7Jackpots: &d%cpsc_jackpots%"
       - ""
-      - "&7Kaeufe heute: &e%daily_bought%/%daily_limit%"
-      - "&7Geoeffnet heute: &e%daily_opened%"
+      - "&7Käufe heute: &e%daily_bought%/%daily_limit%"
+      - "&7Geöffnet heute: &e%daily_opened%"
       - "&7Gratis-Los: &e%daily_status%"
       - "&7Im Besitz: &e%owned%/%owned_limit%"
 
@@ -154,7 +154,7 @@ board:
       material: NETHER_STAR
       name: "&dJackpot-Board"
       lore:
-        - "&7Geoeffnete Lose gesamt: &e%total_opens%"
+        - "&7Geöffnete Lose gesamt: &e%total_opens%"
         - "&7Letzte Jackpots:"
         - "&f%latest_jackpots%"
     pass:
@@ -168,7 +168,7 @@ board:
     quests:
       slot: 15
       material: WRITABLE_BOOK
-      name: "&aTaegliche Auftraege"
+      name: "&aTägliche Aufträge"
       lore:
         - "&f%quests%"
     group_goals:

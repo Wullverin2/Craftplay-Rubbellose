@@ -3,6 +3,7 @@ package de.craftplay.scratchcards.service;
 import de.craftplay.scratchcards.config.ConfigManager;
 import de.craftplay.scratchcards.config.LanguageManager;
 import de.craftplay.scratchcards.database.DatabaseManager;
+import de.craftplay.scratchcards.diagnostic.DiagnosticLogger;
 import de.craftplay.scratchcards.economy.EconomyManager;
 import de.craftplay.scratchcards.model.ScratchcardType;
 import de.craftplay.scratchcards.util.ServerDayUtil;
@@ -10,7 +11,9 @@ import de.craftplay.scratchcards.util.TextUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,12 +26,13 @@ public final class PurchaseService {
     private final FeedbackService feedbackService;
     private final FeatureService featureService;
     private final ProgressionService progressionService;
+    private final DiagnosticLogger diagnosticLogger;
     private final Map<UUID, Long> buyCooldowns = new HashMap<>();
 
     public PurchaseService(ConfigManager configManager, LanguageManager languageManager, DatabaseManager databaseManager,
                            EconomyManager economyManager, ScratchcardItemFactory itemFactory,
                            FeedbackService feedbackService, FeatureService featureService,
-                           ProgressionService progressionService) {
+                           ProgressionService progressionService, DiagnosticLogger diagnosticLogger) {
         this.configManager = configManager;
         this.languageManager = languageManager;
         this.databaseManager = databaseManager;
@@ -37,75 +41,125 @@ public final class PurchaseService {
         this.feedbackService = feedbackService;
         this.featureService = featureService;
         this.progressionService = progressionService;
+        this.diagnosticLogger = diagnosticLogger;
     }
 
     public void buy(Player player, ScratchcardType type) {
+        buy(player, type, 1);
+    }
+
+    public boolean buy(Player player, ScratchcardType type, int amount) {
         if (!player.hasPermission("craftplay.scratchcards.buy")) {
             languageManager.send(player, "no_permission");
-            return;
+            return false;
+        }
+        int maxAmount = Math.max(1, configManager.config().getInt("purchases.max_amount_per_purchase", 64));
+        if (amount <= 0 || amount > maxAmount) {
+            languageManager.send(player, "purchase_invalid_amount", TextUtil.placeholders("%max_amount%", String.valueOf(maxAmount)));
+            return false;
         }
         if (!type.buyable()) {
             languageManager.send(player, "not_buyable");
-            return;
+            return false;
         }
         if (!featureService.isTypeAvailable(type)) {
             featureService.sendTypeUnavailable(player, type);
-            return;
+            return false;
         }
         if (isBuyCooldown(player)) {
             languageManager.send(player, "buy_cooldown");
-            return;
+            return false;
         }
         int perDay = configManager.config().getInt("limits.max_purchases_per_day", 25);
         int boughtToday = dailyPurchaseCount(player);
         if (configManager.config().getBoolean("limits.enabled", true)) {
-            if (perDay > 0 && boughtToday >= perDay) {
+            if (perDay > 0 && amount > perDay - boughtToday) {
                 languageManager.send(player, "purchase_limit_day", dailyLimitPlaceholders(boughtToday, perDay));
-                return;
+                return false;
             }
             int maxOwned = configManager.config().getInt("limits.max_owned_scratchcards", 64);
             int owned = itemFactory.countOwned(player);
-            if (maxOwned > 0 && owned >= maxOwned) {
+            if (maxOwned > 0 && amount > maxOwned - owned) {
                 languageManager.send(player, "owned_limit", ownedLimitPlaceholders(owned, maxOwned));
-                return;
+                return false;
             }
         }
-        if (!itemFactory.canFit(player, type, 1)) {
-            languageManager.send(player, "inventory_full");
-            return;
+        if (!itemFactory.canFit(player, type, amount)) {
+            languageManager.send(player, "purchase_inventory_full", TextUtil.placeholders("%amount%", String.valueOf(amount)));
+            return false;
+        }
+        double totalPrice = type.price() * amount;
+        if (!Double.isFinite(totalPrice) || type.price() < 0.0D) {
+            diagnosticLogger.error("Ungueltiger Kaufpreis fuer Rubellos-Typ " + type.id(), null);
+            languageManager.send(player, "internal_error");
+            return false;
         }
         if (!economyManager.ensureSetup()) {
             languageManager.send(player, "economy_unavailable");
-            return;
+            return false;
         }
-        if (!economyManager.has(player, type.price())) {
-            languageManager.send(player, "not_enough_money", TextUtil.placeholders("%price%", economyManager.format(type.price())));
-            return;
-        }
-        if (!economyManager.withdraw(player, type.price())) {
-            languageManager.send(player, "not_enough_money", TextUtil.placeholders("%price%", economyManager.format(type.price())));
-            return;
+        if (!economyManager.has(player, totalPrice)) {
+            languageManager.send(player, "not_enough_money", TextUtil.placeholders("%price%", economyManager.format(totalPrice)));
+            return false;
         }
 
-        ItemStack item = itemFactory.create(type, 1);
-        Map<Integer, ItemStack> overflow = player.getInventory().addItem(item);
-        if (!overflow.isEmpty()) {
-            economyManager.deposit(player, type.price());
-            languageManager.send(player, "inventory_full");
-            return;
+        List<ItemStack> stacks = new ArrayList<>();
+        int stackSize = itemFactory.create(type, 1).getMaxStackSize();
+        for (int remaining = amount; remaining > 0; remaining -= Math.min(stackSize, remaining)) {
+            stacks.add(itemFactory.create(type, Math.min(stackSize, remaining)));
         }
-        databaseManager.recordPurchase(player.getUniqueId(), player.getName(), type.id(), type.price());
+        ItemStack[] beforePurchase = player.getInventory().getStorageContents();
+        for (int slot = 0; slot < beforePurchase.length; slot++) {
+            if (beforePurchase[slot] != null) {
+                beforePurchase[slot] = beforePurchase[slot].clone();
+            }
+        }
+        if (!economyManager.withdraw(player, totalPrice)) {
+            languageManager.send(player, "not_enough_money", TextUtil.placeholders("%price%", economyManager.format(totalPrice)));
+            return false;
+        }
+
+        boolean stored;
+        boolean fits;
+        try {
+            fits = player.getInventory().addItem(stacks.toArray(ItemStack[]::new)).isEmpty();
+            stored = fits && databaseManager.recordPurchases(player.getUniqueId(), player.getName(), type.id(), type.price(), amount);
+        } catch (RuntimeException exception) {
+            restorePurchase(player, beforePurchase, totalPrice);
+            throw exception;
+        }
+        if (!stored) {
+            // Auch teilweise hinzugefuegte Stacks zuruecknehmen, bevor der Preis erstattet wird.
+            restorePurchase(player, beforePurchase, totalPrice);
+            languageManager.send(player, fits ? "purchase_storage_failed" : "purchase_inventory_full",
+                    TextUtil.placeholders("%amount%", String.valueOf(amount)));
+            return false;
+        }
         buyCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
         int boughtTodayAfterPurchase = dailyPurchaseCount(player);
         languageManager.send(player, "purchase_success", TextUtil.placeholders(
                 "%type%", type.displayName(),
-                "%price%", economyManager.format(type.price()),
+                "%amount%", String.valueOf(amount),
+                "%unit_price%", economyManager.format(type.price()),
+                "%price%", economyManager.format(totalPrice),
+                "%total_price%", economyManager.format(totalPrice),
                 "%daily_bought%", String.valueOf(boughtTodayAfterPurchase),
-                "%daily_limit%", perDay > 0 ? String.valueOf(perDay) : "-",
-                "%daily_remaining%", perDay > 0 ? String.valueOf(Math.max(0, perDay - boughtTodayAfterPurchase)) : "-"
+                "%daily_limit%", configManager.config().getBoolean("limits.enabled", true) && perDay > 0 ? String.valueOf(perDay) : "-",
+                "%daily_remaining%", configManager.config().getBoolean("limits.enabled", true) && perDay > 0
+                        ? String.valueOf(Math.max(0, perDay - boughtTodayAfterPurchase)) : "-"
         ));
         feedbackService.play(player, "buy");
-        progressionService.onBuy(player);
+        progressionService.onBuy(player, amount);
+        return true;
+    }
+
+    private void restorePurchase(Player player, ItemStack[] beforePurchase, double totalPrice) {
+        player.getInventory().setStorageContents(beforePurchase);
+        if (!economyManager.deposit(player, totalPrice)) {
+            diagnosticLogger.error("Kauf-Erstattung fehlgeschlagen: Spieler=" + player.getUniqueId()
+                    + ", Betrag=" + totalPrice, null);
+            languageManager.send(player, "purchase_refund_failed", TextUtil.placeholders("%price%", economyManager.format(totalPrice)));
+        }
     }
 
     public GiveResult give(Player target, ScratchcardType type, int amount) {

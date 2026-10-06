@@ -60,6 +60,18 @@ public final class GuiManager {
         ShopHolder holder = new ShopHolder();
         Inventory inventory = Bukkit.createInventory(holder, size, TextUtil.color(configManager.gui().getString("shop.title", "&8Rubellos-Shop")));
         holder.setInventory(inventory);
+        refreshShop(player, holder);
+        player.openInventory(inventory);
+    }
+
+    public void refreshShop(Player player, ShopHolder holder) {
+        Inventory inventory = holder.getInventory();
+        inventory.clear();
+        holder.clearMappings();
+        int maxAmount = Math.max(1, configManager.config().getInt("purchases.max_amount_per_purchase", 64));
+        if (holder.amount() > maxAmount || !configManager.gui().getBoolean("shop.quantity_selector.enabled", true)) {
+            holder.amount(1);
+        }
 
         if (configManager.gui().getBoolean("shop.filler.enabled", true)) {
             ItemStack filler = namedItem("shop.filler", Map.of());
@@ -74,7 +86,7 @@ public final class GuiManager {
                 continue;
             }
             holder.setType(slot, type.id());
-            inventory.setItem(slot, shopItem(type));
+            inventory.setItem(slot, shopItem(type, holder.amount()));
         }
 
         int infoSlot = configManager.gui().getInt("shop.info.slot", -1);
@@ -82,7 +94,21 @@ public final class GuiManager {
             inventory.setItem(infoSlot, shopInfoItem(player));
         }
 
-        player.openInventory(inventory);
+        if (configManager.gui().getBoolean("shop.quantity_selector.enabled", true)) {
+            List<Integer> amounts = configManager.gui().getIntegerList("shop.quantity_selector.amounts");
+            List<Integer> slots = configManager.gui().getIntegerList("shop.quantity_selector.slots");
+            for (int index = 0; index < amounts.size() && index < slots.size(); index++) {
+                int amount = amounts.get(index);
+                int slot = slots.get(index);
+                if (amount <= 0 || amount > maxAmount || slot < 0 || slot >= inventory.getSize()
+                        || slot == infoSlot || holder.typeAt(slot) != null || holder.amountAt(slot) != null) {
+                    continue;
+                }
+                String path = amount == holder.amount() ? "shop.quantity_selector.selected_item" : "shop.quantity_selector.item";
+                holder.setAmountOption(slot, amount);
+                inventory.setItem(slot, namedItem(path, TextUtil.placeholders("%amount%", String.valueOf(amount))));
+            }
+        }
     }
 
     public void openBoard(Player player) {
@@ -170,11 +196,14 @@ public final class GuiManager {
         player.openInventory(inventory);
     }
 
-    private ItemStack shopItem(ScratchcardType type) {
+    private ItemStack shopItem(ScratchcardType type, int amount) {
         Map<String, String> placeholders = TextUtil.placeholders(
                 "%type%", type.displayName(),
                 "%type_id%", type.id(),
                 "%price%", TextUtil.money(type.price()),
+                "%unit_price%", TextUtil.money(type.price()),
+                "%amount%", String.valueOf(amount),
+                "%total_price%", TextUtil.money(type.price() * amount),
                 "%chance%", PERCENT_FORMAT.format(rewardManager.winChancePercent(type)),
                 "%win_chance%", PERCENT_FORMAT.format(rewardManager.winChancePercent(type)),
                 "%active%", featureService.isTypeAvailable(type) ? "Ja" : "Nein",
@@ -226,10 +255,10 @@ public final class GuiManager {
         int openedToday = databaseManager.countOpensSince(player.getUniqueId(), dayStart);
         boolean dailyAvailable = configManager.config().getBoolean("daily.enabled", true)
                 && databaseManager.countDailyClaimsSince(player.getUniqueId(), dayStart) <= 0;
-        int purchaseLimit = configManager.config().getInt("limits.max_purchases_per_day", 25);
-        int openLimit = configManager.config().getInt("limits.max_opens_per_day", 25);
+        boolean limitsEnabled = configManager.config().getBoolean("limits.enabled", true);
+        int purchaseLimit = limitsEnabled ? configManager.config().getInt("limits.max_purchases_per_day", 25) : 0;
         int owned = itemFactory.countOwned(player);
-        int ownedLimit = configManager.config().getInt("limits.max_owned_scratchcards", 64);
+        int ownedLimit = limitsEnabled ? configManager.config().getInt("limits.max_owned_scratchcards", 64) : 0;
         Map<String, String> placeholders = TextUtil.placeholders(
                 "%player%", player.getName(),
                 "%cpsc_bought%", String.valueOf(stats.bought()),
@@ -241,8 +270,6 @@ public final class GuiManager {
                 "%daily_limit%", purchaseLimit > 0 ? String.valueOf(purchaseLimit) : "-",
                 "%daily_remaining%", purchaseLimit > 0 ? String.valueOf(Math.max(0, purchaseLimit - boughtToday)) : "-",
                 "%daily_opened%", String.valueOf(openedToday),
-                "%daily_open_limit%", openLimit > 0 ? String.valueOf(openLimit) : "-",
-                "%daily_open_remaining%", openLimit > 0 ? String.valueOf(Math.max(0, openLimit - openedToday)) : "-",
                 "%daily_available%", dailyAvailable ? "Ja" : "Nein",
                 "%daily_status%", dailyAvailable ? "Verfuegbar" : "Abgeholt",
                 "%owned%", String.valueOf(owned),

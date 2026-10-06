@@ -14,6 +14,7 @@ import de.craftplay.scratchcards.service.ScratchcardSessionManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -53,7 +54,14 @@ public final class GuiListener implements Listener {
         Inventory top = event.getView().getTopInventory();
         if (top.getHolder() instanceof ShopHolder shopHolder) {
             event.setCancelled(true);
-            if (!(event.getWhoClicked() instanceof Player player) || event.getRawSlot() >= top.getSize()) {
+            if (!(event.getWhoClicked() instanceof Player player) || event.getRawSlot() < 0 || event.getRawSlot() >= top.getSize()
+                    || (event.getClick() != ClickType.LEFT && event.getClick() != ClickType.RIGHT)) {
+                return;
+            }
+            Integer amount = shopHolder.amountAt(event.getRawSlot());
+            if (amount != null) {
+                shopHolder.amount(amount);
+                guiManager.refreshShop(player, shopHolder);
                 return;
             }
             String typeId = shopHolder.typeAt(event.getRawSlot());
@@ -61,7 +69,10 @@ public final class GuiListener implements Listener {
                 return;
             }
             rewardManager.type(typeId).ifPresentOrElse(
-                    type -> purchaseService.buy(player, type),
+                    type -> {
+                        purchaseService.buy(player, type, shopHolder.amount());
+                        guiManager.refreshShop(player, shopHolder);
+                    },
                     () -> languageManager.send(player, "type_not_found")
             );
             return;

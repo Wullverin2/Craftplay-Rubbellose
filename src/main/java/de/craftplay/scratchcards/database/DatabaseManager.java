@@ -223,27 +223,51 @@ public final class DatabaseManager {
     }
 
     public synchronized void recordPurchase(UUID uuid, String playerName, String typeId, double price) {
-        ensureStats(uuid, playerName);
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO " + table("purchases")
-                     + " (uuid, player_name, type_id, price, purchased_at) VALUES (?, ?, ?, ?, ?)")) {
-            statement.setString(1, uuid.toString());
-            statement.setString(2, playerName);
-            statement.setString(3, typeId);
-            statement.setDouble(4, price);
-            statement.setLong(5, System.currentTimeMillis());
-            statement.executeUpdate();
-        } catch (SQLException exception) {
-            log(Level.SEVERE, "Kauf konnte nicht gespeichert werden", exception);
+        recordPurchases(uuid, playerName, typeId, price, 1);
+    }
+
+    public synchronized boolean recordPurchases(UUID uuid, String playerName, String typeId, double unitPrice, int amount) {
+        if (amount <= 0 || !Double.isFinite(unitPrice) || unitPrice < 0.0D) {
+            throw new IllegalArgumentException("Kaufmenge und Preis muessen gueltig sein.");
         }
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("UPDATE " + table("player_stats")
-                     + " SET player_name = ?, bought = bought + 1 WHERE uuid = ?")) {
-            statement.setString(1, playerName);
-            statement.setString(2, uuid.toString());
-            statement.executeUpdate();
+        // Eine Zeile je Los erhaelt die bisherigen Tageszaehler und Statistiken ohne Schema-Aenderung.
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                ensureStats(connection, uuid, playerName);
+                try (PreparedStatement statement = connection.prepareStatement("INSERT INTO " + table("purchases")
+                        + " (uuid, player_name, type_id, price, purchased_at) VALUES (?, ?, ?, ?, ?)")) {
+                    long purchasedAt = System.currentTimeMillis();
+                    for (int index = 0; index < amount; index++) {
+                        statement.setString(1, uuid.toString());
+                        statement.setString(2, playerName);
+                        statement.setString(3, typeId);
+                        statement.setDouble(4, unitPrice);
+                        statement.setLong(5, purchasedAt);
+                        statement.addBatch();
+                    }
+                    statement.executeBatch();
+                }
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE " + table("player_stats")
+                        + " SET player_name = ?, bought = bought + ? WHERE uuid = ?")) {
+                    statement.setString(1, playerName);
+                    statement.setInt(2, amount);
+                    statement.setString(3, uuid.toString());
+                    statement.executeUpdate();
+                }
+                connection.commit();
+                return true;
+            } catch (SQLException exception) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackException) {
+                    exception.addSuppressed(rollbackException);
+                }
+                throw exception;
+            }
         } catch (SQLException exception) {
-            log(Level.SEVERE, "Kaufstatistik konnte nicht aktualisiert werden", exception);
+            log(Level.SEVERE, "Kauf konnte nicht vollstaendig gespeichert werden", exception);
+            return false;
         }
     }
 
@@ -968,27 +992,28 @@ public final class DatabaseManager {
     }
 
     private void ensureStats(UUID uuid, String playerName) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement check = connection.prepareStatement("SELECT uuid FROM " + table("player_stats") + " WHERE uuid = ?")) {
+        try (Connection connection = dataSource.getConnection()) {
+            ensureStats(connection, uuid, playerName);
+        } catch (SQLException exception) {
+            log(Level.SEVERE, "Spielerstatistik konnte nicht angelegt oder geprueft werden", exception);
+        }
+    }
+
+    private void ensureStats(Connection connection, UUID uuid, String playerName) throws SQLException {
+        try (PreparedStatement check = connection.prepareStatement("SELECT uuid FROM " + table("player_stats") + " WHERE uuid = ?")) {
             check.setString(1, uuid.toString());
             try (ResultSet resultSet = check.executeQuery()) {
                 if (resultSet.next()) {
                     return;
                 }
             }
-        } catch (SQLException exception) {
-            log(Level.SEVERE, "Spielerstatistik konnte nicht geprüft werden", exception);
-            return;
         }
 
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement insert = connection.prepareStatement("INSERT INTO " + table("player_stats")
+        try (PreparedStatement insert = connection.prepareStatement("INSERT INTO " + table("player_stats")
                      + " (uuid, player_name, bought, opened, won_money, best_win, jackpots) VALUES (?, ?, 0, 0, 0, 0, 0)")) {
             insert.setString(1, uuid.toString());
             insert.setString(2, playerName == null ? "Unbekannt" : playerName);
             insert.executeUpdate();
-        } catch (SQLException exception) {
-            log(Level.SEVERE, "Spielerstatistik konnte nicht angelegt werden", exception);
         }
     }
 

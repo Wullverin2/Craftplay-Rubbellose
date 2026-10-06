@@ -19,13 +19,13 @@ mvn package
 Die fertige Plugin-Datei liegt danach hier:
 
 ```text
-target/Craftplay-Rubbellose-0.3.2.jar
+target/Craftplay-Rubbellose-0.3.3.jar
 ```
 
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.2.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.3.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein Economy-Plugin installieren, falls noch nicht vorhanden.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.
@@ -45,6 +45,7 @@ target/Craftplay-Rubbellose-0.3.2.jar
 | --- | --- |
 | `/rubbellos` | Shop oeffnen |
 | `/rubbellos shop` | Shop oeffnen |
+| `/rubbellos buy <typ> <anzahl>` | Mehrere Lose desselben Typs kaufen |
 | `/rubbellos claim` | Offenes Rubellos fortsetzen |
 | `/rubbellos daily` | Taegliches Gratis-Los abholen |
 | `/rubbellos history` | Eigene Gewinn-Historie anzeigen |
@@ -92,7 +93,8 @@ Wenn PlaceholderAPI installiert ist, werden diese Platzhalter registriert:
 ## Spielerfeatures
 
 - Daily-Los mit taeglichem Reset nach Rootserver-/JVM-Zeit.
-- Kauf-, Oeffnungs- und Besitzlimits ueber `config.yml`.
+- Kauf- und Besitzlimits ueber `config.yml`; kein Tageslimit fuer Oeffnungen.
+- Mehrfachkauf mit Mengenauswahl und Gesamtpreis im Shop.
 - Gewinnvorschau mit Seltenheiten und effektiven Chancen.
 - Lucky Hour mit konfigurierbarem Gewinnbonus.
 - Streak-System fuer regelmaessiges Oeffnen.
@@ -109,6 +111,16 @@ Wenn PlaceholderAPI installiert ist, werden diese Platzhalter registriert:
 ## Bedrock/Geyser
 
 Bedrock-Spieler nutzen dieselben Befehle wie Java-Spieler. `/rubbellos` wird zusaetzlich ueber Papers Brigadier-Command-System registriert, damit Geyser den Command sauber an Bedrock-Clients ausliefern kann. Es gibt kein festes Menue-Item im Inventar; nur gekaufte oder erhaltene Rubellose landen dort.
+
+## Mehrere Lose kaufen
+
+Im Shop zuerst die Menge (standardmaessig 1, 5, 10, 25 oder 64) auswaehlen, dann den gewuenschten Lostyp anklicken. Der Lostyp zeigt Einzelpreis, ausgewaehlte Menge und Gesamtpreis an. Alternativ kauft `/rubbellos buy small 5` direkt fuenf kleine Lose.
+
+`purchases.max_amount_per_purchase` in `config.yml` begrenzt die Menge pro Kauf (Standard: 64). Mengen, Slots und Anzeigen stehen in `gui.yml` unter `shop.quantity_selector`; die Platzhalter `%amount%`, `%unit_price%` und `%total_price%` stehen fuer Kaufmenge, Einzelpreis und Gesamtpreis. `shop.quantity_selector.enabled: false` deaktiviert die Mengenauswahl im GUI, nicht den Kaufbefehl.
+
+Geld, Inventarplatz, Tageskauflimit und Besitzlimit muessen fuer die gesamte Menge reichen. Sonst wird nichts gekauft oder abgebucht. Der Standard erlaubt weiterhin 25 gekaufte Lose pro Tag, nicht 25 Kaufvorgaenge. Jedes Los zaehlt einzeln fuer Statistiken, Quests, Gruppenziele und Pass-XP. Bei einem Speicherfehler wird das Inventar zurueckgesetzt und eine Erstattung versucht; fehlgeschlagene Erstattungen werden protokolliert.
+
+Das bisherige `limits.max_opens_per_day` wird beim Start oder `/rubbellos reload` automatisch entfernt. Alle vorhandenen Lose koennen ohne Tages-Oeffnungslimit geoeffnet werden; Cooldown und Schutz vor mehreren gleichzeitig laufenden Losen bleiben erhalten. Bestehende eigene Einstellungen bleiben erhalten, neue Kaufoptionen werden automatisch ergaenzt.
 
 ## Sicherheitslogik
 

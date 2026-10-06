@@ -37,9 +37,13 @@ public final class ProgressionService {
     }
 
     public void onBuy(Player player) {
-        addPassXp(player, "buy");
-        progressQuests(player, "buy", 1);
-        progressGroupGoals("buy", 1);
+        onBuy(player, 1);
+    }
+
+    public void onBuy(Player player, int amount) {
+        addPassXp(player, "buy", amount);
+        progressQuests(player, "buy", amount);
+        progressGroupGoals("buy", amount);
     }
 
     public void onOpen(Player player) {
@@ -181,10 +185,15 @@ public final class ProgressionService {
     }
 
     private void addPassXp(Player player, String event) {
+        addPassXp(player, event, 1);
+    }
+
+    private void addPassXp(Player player, String event, int amount) {
         if (!configManager.config().getBoolean("pass.enabled", true)) {
             return;
         }
-        int xp = Math.max(0, configManager.config().getInt("pass.xp." + event, 0));
+        int xp = (int) Math.min(Integer.MAX_VALUE,
+                (long) Math.max(0, configManager.config().getInt("pass.xp." + event, 0)) * Math.max(0, amount));
         if (xp <= 0) {
             return;
         }

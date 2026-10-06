@@ -40,11 +40,14 @@ scratchcard:
 
 limits:
   enabled: true
-  # Alle Tageslimits werden um 00:00 Uhr nach Rootserver-/JVM-Zeit zurueckgesetzt.
+  # Das Kauf-Tageslimit wird um 00:00 Uhr nach Rootserver-/JVM-Zeit zurueckgesetzt.
   max_purchases_per_day: 25
-  max_opens_per_day: 25
   # 0 deaktiviert das Besitzlimit. Gezaehlt werden echte Rubellos-Items mit Plugin-Markierung im Inventar.
   max_owned_scratchcards: 64
+
+purchases:
+  # Maximal gleichzeitig kaufbare Lose; Kauf- und Besitzlimit gelten fuer jedes einzelne Los.
+  max_amount_per_purchase: 64
 
 cooldown:
   open_seconds: 3

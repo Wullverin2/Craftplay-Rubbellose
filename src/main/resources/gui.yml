@@ -13,17 +13,33 @@ shop:
   card_item:
     name: "%type%"
     lore:
-      - "&7Preis: &e%price%"
+      - "&7Preis pro Los: &e%price%"
+      - "&7Anzahl: &e%amount%"
+      - "&7Gesamtpreis: &e%total_price%"
       - "&7Gewinnchance: &e%chance%%"
       - "&7Lucky Hour: &e%lucky_hour%"
       - ""
       - "&7Gewinne:"
       - "%reward_chances%"
       - ""
-      - "&aKlicke zum Kaufen"
+      - "&a%amount%x kaufen: &e%total_price%"
     reward_chance_line: "&8- &f%reward% &7[%rarity%&7]: &e%chance%%"
   unavailable_lore:
     - "&cDieses Rubellos ist aktuell nicht kaufbar."
+  quantity_selector:
+    enabled: true
+    amounts: [1, 5, 10, 25, 64]
+    slots: [18, 19, 20, 24, 25]
+    item:
+      material: PAPER
+      name: "&e%amount%x"
+      lore:
+        - "&7Kaufmenge: &f%amount%"
+    selected_item:
+      material: LIME_DYE
+      name: "&a%amount%x"
+      lore:
+        - "&aAusgewaehlt"
   info:
     slot: 22
     material: BOOK
@@ -35,7 +51,7 @@ shop:
       - "&7Jackpots: &d%cpsc_jackpots%"
       - ""
       - "&7Kaeufe heute: &e%daily_bought%/%daily_limit%"
-      - "&7Geoeffnet heute: &e%daily_opened%/%daily_open_limit%"
+      - "&7Geoeffnet heute: &e%daily_opened%"
       - "&7Gratis-Los: &e%daily_status%"
       - "&7Im Besitz: &e%owned%/%owned_limit%"
 

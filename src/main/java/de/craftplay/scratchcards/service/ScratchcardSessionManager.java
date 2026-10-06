@@ -12,7 +12,6 @@ import de.craftplay.scratchcards.model.Reward;
 import de.craftplay.scratchcards.model.RewardItem;
 import de.craftplay.scratchcards.model.ScratchcardType;
 import de.craftplay.scratchcards.util.ItemBuilder;
-import de.craftplay.scratchcards.util.ServerDayUtil;
 import de.craftplay.scratchcards.util.TextUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -82,19 +81,6 @@ public final class ScratchcardSessionManager {
             languageManager.send(player, "already_running");
             return;
         }
-        if (configManager.config().getBoolean("limits.enabled", true)) {
-            int perDay = configManager.config().getInt("limits.max_opens_per_day", 25);
-            int openedToday = dailyOpenCount(player);
-            if (perDay > 0 && openedToday >= perDay) {
-                languageManager.send(player, "open_limit_day", TextUtil.placeholders(
-                        "%daily_opened%", String.valueOf(openedToday),
-                        "%daily_open_limit%", String.valueOf(perDay),
-                        "%daily_open_remaining%", String.valueOf(Math.max(0, perDay - openedToday))
-                ));
-                return;
-            }
-        }
-
         Optional<ScratchcardType> optionalType = rewardManager.type(typeId.get());
         if (optionalType.isEmpty()) {
             languageManager.send(player, "type_not_found", TextUtil.placeholders("%type%", typeId.get()));
@@ -418,10 +404,6 @@ public final class ScratchcardSessionManager {
         }
         long last = openCooldowns.getOrDefault(player.getUniqueId(), 0L);
         return System.currentTimeMillis() - last < seconds * 1000L;
-    }
-
-    private int dailyOpenCount(Player player) {
-        return databaseManager.countOpensSince(player.getUniqueId(), ServerDayUtil.currentServerDayStartMillis());
     }
 
     private String formatMultiplier(double multiplier) {

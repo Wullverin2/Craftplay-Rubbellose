@@ -100,6 +100,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
         }
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
+            case "buy" -> buy(sender, args);
             case "claim" -> claim(sender);
             case "give" -> give(sender, args);
             case "reload" -> reload(sender);
@@ -143,6 +144,23 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
             return;
         }
         sessionManager.claim(player);
+    }
+
+    private void buy(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            languageManager.send(sender, "only_players");
+            return;
+        }
+        if (args.length != 3) {
+            languageManager.send(player, "purchase_usage");
+            return;
+        }
+        ScratchcardType type = rewardManager.type(args[1]).orElse(null);
+        if (type == null) {
+            languageManager.send(player, "type_not_found", TextUtil.placeholders("%type%", args[1]));
+            return;
+        }
+        purchaseService.buy(player, type, parsePositiveAmount(args[2]));
     }
 
     private void give(CommandSender sender, String[] args) {
@@ -285,7 +303,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Geoeffnete Lose gesamt", "%value%", String.valueOf(databaseManager.countTotalOpens())));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Limits", "%value%", String.valueOf(configManager.config().getBoolean("limits.enabled", true))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Kaeufe pro Tag", "%value%", String.valueOf(configManager.config().getInt("limits.max_purchases_per_day", 25))));
-        languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Oeffnungen pro Tag", "%value%", String.valueOf(configManager.config().getInt("limits.max_opens_per_day", 25))));
+        languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Maximale Kaufmenge", "%value%", String.valueOf(configManager.config().getInt("purchases.max_amount_per_purchase", 64))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Besitzlimit", "%value%", String.valueOf(configManager.config().getInt("limits.max_owned_scratchcards", 64))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Daily-Los", "%value%", configManager.config().getBoolean("daily.enabled", true)
                 + " typ=" + configManager.config().getString("daily.type", "small")));
@@ -545,8 +563,16 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
     public List<String> tabComplete(CommandSender sender, String label, String[] args) {
         try {
             if (args.length == 1) {
-                return filter(List.of("shop", "claim", "daily", "history", "series", "pass", "quests", "board", "risk", "gift", "simulate",
+                return filter(List.of("shop", "buy", "claim", "daily", "history", "series", "pass", "quests", "board", "risk", "gift", "simulate",
                         "give", "reload", "stats", "info", "list", "debug", "jackpots", "resetpending", "help"), args[0]);
+            }
+            if (args.length == 2 && args[0].equalsIgnoreCase("buy")) {
+                return filter(rewardManager.types().stream().filter(ScratchcardType::buyable).map(ScratchcardType::id).toList(), args[1]);
+            }
+            if (args.length == 3 && args[0].equalsIgnoreCase("buy")) {
+                int maxAmount = Math.max(1, configManager.config().getInt("purchases.max_amount_per_purchase", 64));
+                return filter(List.of(1, 5, 10, 25, 64).stream().filter(amount -> amount <= maxAmount)
+                        .map(String::valueOf).toList(), args[2]);
             }
             if (args.length == 2 && (args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("gift"))) {
                 return filter(Bukkit.getOnlinePlayers().stream().map(Player::getName).toList(), args[1]);

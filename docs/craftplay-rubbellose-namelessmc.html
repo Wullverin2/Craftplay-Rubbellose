@@ -25,7 +25,7 @@ NamelessMC Wiki-Version
   <tbody>
     <tr><th>Bereich</th><th>Details</th></tr>
     <tr><td>Plugin</td><td>Craftplay-Rubbellose</td></tr>
-    <tr><td>Version</td><td>0.3.2</td></tr>
+    <tr><td>Version</td><td>0.3.3</td></tr>
     <tr><td>Server</td><td>Paper/Purpur 1.21.x</td></tr>
     <tr><td>Java</td><td>Java 21</td></tr>
     <tr><td>Wirtschaft</td><td>Vault + Economy-Plugin</td></tr>
@@ -43,7 +43,8 @@ NamelessMC Wiki-Version
   <li>echtes Rubbel-GUI mit neun verdeckten Feldern</li>
   <li>automatische Gewinnauszahlung nach drei gleichen Treffern</li>
   <li>Jackpot-Broadcasts und Jackpot-Historie</li>
-  <li>Tageslimits fuer Kaeufe und Oeffnungen</li>
+  <li>Tageslimit fuer Kaeufe; kein Tageslimit fuer Oeffnungen</li>
+  <li>Mehrfachkauf mit Mengenauswahl und Gesamtpreis</li>
   <li>Besitzlimit fuer echte Plugin-Rubellose</li>
   <li>Persistenz: offene Rubellose bleiben nach Disconnect oder Restart erhalten</li>
   <li>Spieler- und Serverstatistiken</li>
@@ -76,7 +77,14 @@ NamelessMC Wiki-Version
 </p>
 <p>
   Im Shop werden die verfuegbaren Rubellos-Typen angezeigt. Jedes Los zeigt Preis, Gewinnchance und moegliche
-  Gewinne. Die Statistik in der Mitte informiert ueber gekaufte und geoeffnete Lose, Tageslimits und Besitzlimit.
+  Gewinne. Zuerst die Menge (1, 5, 10, 25 oder 64) auswaehlen, dann den Lostyp anklicken. Einzelpreis und Gesamtpreis
+  werden angezeigt. Die Statistik in der Mitte informiert ueber gekaufte und geoeffnete Lose, Tageskauflimit und Besitzlimit.
+  Ein Mehrfachkauf erfolgt nur, wenn Geld, Platz und verbleibende Limits fuer alle Lose reichen. Jedes Los zaehlt einzeln zum Kauflimit.
+</p>
+<p>
+  Mengen und Slots stehen in <code>gui.yml</code> unter <code>shop.quantity_selector</code>.
+  <code>purchases.max_amount_per_purchase</code> in <code>config.yml</code> begrenzt die Menge pro Kauf.
+  Das alte <code>limits.max_opens_per_day</code> wird automatisch entfernt; Oeffnungs-Cooldown und Schutz vor gleichzeitig laufenden Losen bleiben bestehen.
 </p>
 
 <h3>Rubbel-GUI</h3>
@@ -139,6 +147,7 @@ NamelessMC Wiki-Version
   <tbody>
     <tr><td><code>/rubbellos</code></td><td>Shop oeffnen</td></tr>
     <tr><td><code>/rubbellos shop</code></td><td>Shop oeffnen</td></tr>
+    <tr><td><code>/rubbellos buy &lt;typ&gt; &lt;anzahl&gt;</code></td><td>Mehrere Lose desselben Typs kaufen</td></tr>
     <tr><td><code>/rubbellos claim</code></td><td>offenes Rubellos fortsetzen</td></tr>
     <tr><td><code>/rubbellos daily</code></td><td>taegliches Gratis-Los abholen</td></tr>
     <tr><td><code>/rubbellos history</code></td><td>eigene Gewinn-Historie anzeigen</td></tr>
@@ -183,7 +192,7 @@ NamelessMC Wiki-Version
 
 <ol>
   <li>Server stoppen.</li>
-  <li><code>Craftplay-Rubbellose-0.3.2.jar</code> in den <code>plugins</code>-Ordner kopieren.</li>
+  <li><code>Craftplay-Rubbellose-0.3.3.jar</code> in den <code>plugins</code>-Ordner kopieren.</li>
   <li>Vault und ein kompatibles Economy-Plugin installieren.</li>
   <li>Server starten.</li>
   <li>Dateien in <code>plugins/Craftplay-Rubbellose/</code> anpassen.</li>

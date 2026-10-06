@@ -53,11 +53,11 @@ public final class ConfigManager {
     }
 
     private void syncExistingFiles() {
-        syncFile("config.yml", List.of("limits.max_purchases_per_hour", "bedrock_support"));
+        syncFile("config.yml", List.of("limits.max_purchases_per_hour", "limits.max_opens_per_day", "bedrock_support"));
         syncFile("gui.yml", List.of());
         syncFile("rewards.yml", List.of());
-        syncFile("language_de.yml", List.of("bedrock_shop_opener_given"));
-        syncFile("language_en.yml", List.of("bedrock_shop_opener_given"));
+        syncFile("language_de.yml", List.of("bedrock_shop_opener_given", "open_limit_day"));
+        syncFile("language_en.yml", List.of("bedrock_shop_opener_given", "open_limit_day"));
     }
 
     private void syncFile(String name, List<String> obsoletePaths) {
@@ -70,6 +70,11 @@ public final class ConfigManager {
                 changed = replaceTextValue(current, "/rubellos", "/rubbellos") || changed;
             }
             if (name.equals("gui.yml")) {
+                changed = replaceTextValue(current, "%daily_opened%/%daily_open_limit%", "%daily_opened%") || changed;
+                changed = replaceTextValue(current, "%daily_open_limit%", "-") || changed;
+                changed = replaceTextValue(current, "%daily_open_remaining%", "-") || changed;
+                changed = replaceTextValue(current, "&7Preis: &e%price%", "&7Preis pro Los: &e%price%") || changed;
+                changed = replaceTextValue(current, "&aKlicke zum Kaufen", "&a%amount%x kaufen: &e%total_price%") || changed;
                 changed = replaceExactValue(current, "shop.card_item.reward_chance_line",
                         "&8- &f%reward%&7: &e%chance%%",
                         "&8- &f%reward% &7[%rarity%&7]: &e%chance%%") || changed;
@@ -77,6 +82,16 @@ public final class ConfigManager {
                 changed = mergeMissingListEntries(current, defaults, "shop.info.lore") || changed;
             }
             if (name.equals("language_de.yml") || name.equals("language_en.yml")) {
+                // Eigene Nachrichtentexte behalten; nur die bisherigen Standardtexte aktualisieren.
+                boolean german = name.equals("language_de.yml");
+                changed = replaceExactValue(current, "purchase_success", german
+                                ? "%prefix%&aDu hast &e%type% &afür &e%price% &agekauft. &7Heute: &e%daily_bought%/%daily_limit% &7gekauft, &e%daily_remaining% &7übrig."
+                                : "%prefix%&aYou bought &e%type% &afor &e%price%&a. &7Today: &e%daily_bought%/%daily_limit% &7bought, &e%daily_remaining% &7left.",
+                        defaults.getString("purchase_success")) || changed;
+                changed = replaceExactValue(current, "purchase_limit_day", german
+                                ? "%prefix%&cDu hast dein Tageslimit erreicht. &7Heute: &e%daily_bought%/%daily_limit%&7. Es wird um Mitternacht zurückgesetzt."
+                                : "%prefix%&cYou reached your daily purchase limit. &7Today: &e%daily_bought%/%daily_limit%&7. It resets at midnight.",
+                        defaults.getString("purchase_limit_day")) || changed;
                 changed = mergeMissingListEntries(current, defaults, "help") || changed;
             }
             for (String path : obsoletePaths) {

@@ -66,7 +66,7 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
             featureService = new FeatureService(configManager, languageManager, databaseManager, economyManager);
             progressionService = new ProgressionService(configManager, languageManager, databaseManager, economyManager);
             guiManager = new GuiManager(configManager, rewardManager, databaseManager, itemFactory, featureService, progressionService);
-            purchaseService = new PurchaseService(configManager, languageManager, databaseManager, economyManager, itemFactory, feedbackService, featureService, progressionService);
+            purchaseService = new PurchaseService(configManager, languageManager, databaseManager, economyManager, itemFactory, feedbackService, featureService, progressionService, diagnosticLogger);
             sessionManager = new ScratchcardSessionManager(this, configManager, languageManager, databaseManager,
                     economyManager, rewardManager, itemFactory, guiManager, diagnosticLogger, feedbackService, featureService, progressionService);
 

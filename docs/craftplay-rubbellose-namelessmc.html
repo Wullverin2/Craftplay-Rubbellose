@@ -25,7 +25,7 @@ NamelessMC Wiki-Version
   <tbody>
     <tr><th>Bereich</th><th>Details</th></tr>
     <tr><td>Plugin</td><td>Craftplay-Rubbellose</td></tr>
-    <tr><td>Version</td><td>0.3.5</td></tr>
+    <tr><td>Version</td><td>0.3.6</td></tr>
     <tr><td>Server</td><td>Paper/Purpur 1.21.x</td></tr>
     <tr><td>Java</td><td>Java 21</td></tr>
     <tr><td>Wirtschaft</td><td>Vault + Economy-Plugin</td></tr>
@@ -45,13 +45,11 @@ NamelessMC Wiki-Version
   <li>Jackpot-Broadcasts und Jackpot-Historie</li>
   <li>Tageslimit fuer Kaeufe; kein Tageslimit fuer Oeffnungen</li>
   <li>Mehrfachkauf mit Mengenauswahl und Gesamtpreis</li>
-  <li>Besitzlimit fuer echte Plugin-Rubellose</li>
   <li>Persistenz: offene Rubellose bleiben nach Disconnect oder Restart erhalten</li>
   <li>Spieler- und Serverstatistiken</li>
   <li>PlaceholderAPI-Unterstuetzung fuer externe Anzeigen</li>
   <li>Admin-Befehle fuer Reload, Diagnose, Give und offene Lose</li>
-  <li>Daily-Los, Lucky Hour, Streaks, Serien, Eventlose und Mystery-Multiplikator</li>
-  <li>Rubellos-Pass, tägliche Aufträge, Gruppenziele, Pity-System und Risiko-Spiel</li>
+  <li>Daily-Los, Lucky Hour, Eventlose und Mystery-Multiplikator</li>
   <li>Bedrock/Geyser-kompatible Command-Registrierung ohne Inventar-Item</li>
 </ul>
 
@@ -78,14 +76,16 @@ NamelessMC Wiki-Version
 <p>
   Im Shop werden die verfügbaren Rubellos-Typen angezeigt. Jedes Los zeigt Preis, Gewinnchance und mögliche
   Gewinne. Zuerst die Menge (1, 5 oder 10) auswählen, dann den Lostyp anklicken. Einzelpreis und Gesamtpreis
-  werden angezeigt. Die Statistik in der Mitte informiert über gekaufte und geöffnete Lose, Tageskauflimit und Besitzlimit.
-  Ein Mehrfachkauf erfolgt nur, wenn Geld, Platz und verbleibende Limits für alle Lose reichen. Jedes Los zählt einzeln zum Kauflimit.
+  werden angezeigt. Die Statistik in der Mitte informiert über gekaufte und geöffnete Lose, Tageskauflimit und aktuelle Losanzahl.
+  Ein Mehrfachkauf erfolgt nur, wenn Geld, Platz und das verbleibende Kauflimit für alle Lose reichen. Jedes Los zählt einzeln zum Kauflimit.
 </p>
 <p>
   Mengen und Slots stehen in <code>gui.yml</code> unter <code>shop.quantity_selector</code>.
   <code>purchases.max_amount_per_purchase</code> in <code>config.yml</code> begrenzt die Menge pro Kauf.
   Das alte <code>limits.max_opens_per_day</code> wird automatisch entfernt; Oeffnungs-Cooldown und Schutz vor gleichzeitig laufenden Losen bleiben bestehen.
 </p>
+
+<p>Es gibt kein Besitz- oder Tages-Öffnungslimit. Risiko-Spiel, Pass, XP und weitere Fortschrittsbelohnungen sind entfernt. Veraltete Einstellungen werden automatisch bereinigt; Preise, Chancen und das Kauflimit bleiben erhalten. Die Platzprüfung im Inventar bleibt aktiv.</p>
 
 <h3>Rubbel-GUI</h3>
 <p>
@@ -151,11 +151,7 @@ NamelessMC Wiki-Version
     <tr><td><code>/rubbellos claim</code></td><td>offenes Rubellos fortsetzen</td></tr>
     <tr><td><code>/rubbellos daily</code></td><td>taegliches Gratis-Los abholen</td></tr>
     <tr><td><code>/rubbellos history</code></td><td>eigene Gewinn-Historie anzeigen</td></tr>
-    <tr><td><code>/rubbellos series</code></td><td>Rubellos-Serien anzeigen</td></tr>
-    <tr><td><code>/rubbellos pass</code></td><td>Rubellos-Pass anzeigen</td></tr>
-    <tr><td><code>/rubbellos quests</code></td><td>taegliche Auftraege anzeigen</td></tr>
-    <tr><td><code>/rubbellos board</code></td><td>Jackpot-, Pass- und Ziel-Board oeffnen</td></tr>
-    <tr><td><code>/rubbellos risk</code></td><td>letzten Geldgewinn riskieren</td></tr>
+    <tr><td><code>/rubbellos board</code></td><td>Jackpot- und Lucky-Hour-Board öffnen</td></tr>
     <tr><td><code>/rubbellos gift &lt;spieler&gt; &lt;typ&gt; &lt;anzahl&gt;</code></td><td>eigene Lose verschenken</td></tr>
     <tr><td><code>/rubbellos jackpots</code></td><td>Jackpot-Historie oeffnen oder anzeigen</td></tr>
     <tr><td><code>/rubbellos stats</code></td><td>Serverstatistiken anzeigen</td></tr>
@@ -192,7 +188,7 @@ NamelessMC Wiki-Version
 
 <ol>
   <li>Server stoppen.</li>
-  <li><code>Craftplay-Rubbellose-0.3.5.jar</code> in den <code>plugins</code>-Ordner kopieren.</li>
+  <li><code>Craftplay-Rubbellose-0.3.6.jar</code> in den <code>plugins</code>-Ordner kopieren.</li>
   <li>Vault und ein kompatibles Economy-Plugin installieren.</li>
   <li>Server starten.</li>
   <li>Dateien in <code>plugins/Craftplay-Rubbellose/</code> anpassen.</li>

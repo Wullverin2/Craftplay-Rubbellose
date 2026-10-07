@@ -61,7 +61,7 @@ class ConfigManagerTest {
 
         assertFalse(configs.config().contains("limits.max_opens_per_day"));
         assertEquals(37, configs.config().getInt("limits.max_purchases_per_day"));
-        assertEquals(128, configs.config().getInt("limits.max_owned_scratchcards"));
+        assertFalse(configs.config().contains("limits.max_owned_scratchcards"));
         assertEquals(32, configs.config().getInt("purchases.max_amount_per_purchase"));
         assertEquals(7, configs.config().getInt("cooldown.open_seconds"));
         assertEquals("My custom shop", configs.gui().getString("shop.title"));
@@ -146,6 +146,77 @@ class ConfigManagerTest {
     }
 
     @Test
+    void removesRiskPassAndAllCollectionFeaturesWhilePreservingPurchaseSettingsAndRewards() throws Exception {
+        List<String> retired = List.of("risk", "pass", "quests", "series", "streak", "pity", "group_goals");
+        YamlConfiguration config = new YamlConfiguration();
+        for (String root : retired) {
+            config.set(root + ".enabled", true);
+            config.set(root + ".custom_value", 987);
+        }
+        config.set("limits.max_owned_scratchcards", 1);
+        config.set("daily.respect_owned_limit", true);
+        config.set("limits.max_purchases_per_day", 10);
+        config.set("database.sqlite.file", "custom.db");
+        config.save(directory.resolve("config.yml").toFile());
+        YamlConfiguration gui = new YamlConfiguration();
+        for (String item : List.of("pass", "quests", "group_goals")) {
+            gui.set("board.items." + item + ".name", "My legacy widget");
+        }
+        gui.set("board.items.jackpots.slot", 7);
+        gui.set("shop.info.lore", List.of("Meine Anzeige", "Im Besitz: %owned%/%owned_limit%"));
+        gui.save(directory.resolve("gui.yml").toFile());
+        YamlConfiguration rewards = new YamlConfiguration();
+        rewards.set("scratchcards.small.price", 123);
+        rewards.set("scratchcards.small.rewards.nothing.chance", 81.5);
+        rewards.save(directory.resolve("rewards.yml").toFile());
+        for (String name : List.of("language_de.yml", "language_en.yml")) {
+            YamlConfiguration language = new YamlConfiguration();
+            for (String key : List.of("risk_available", "pass_xp", "pass_info", "quest_completed", "streak_reward", "series_completed")) {
+                language.set(key, "Obsolete custom message");
+            }
+            language.set("owned_limit", "Obsolete quota");
+            language.set("reward_win", "Mein eigener Gewinntext");
+            language.set("help", List.of("Custom help", "&6/rubbellos pass &7- Pass",
+                    "&6/rubellos risk &7- Risiko", "&6/scratchcard quests &7- Quests",
+                    "&6/rubbellos series &7- Serie", "&6/rubbellos board &7- Jackpot-/Pass-/Ziel-Board öffnen"));
+            language.save(directory.resolve(name).toFile());
+        }
+
+        configs.load();
+
+        for (String root : retired) {
+            assertFalse(configs.config().contains(root), root);
+        }
+        assertFalse(configs.config().contains("limits.max_owned_scratchcards"));
+        assertFalse(configs.config().contains("daily.respect_owned_limit"));
+        assertEquals(10, configs.config().getInt("limits.max_purchases_per_day"));
+        assertEquals("custom.db", configs.config().getString("database.sqlite.file"));
+        assertEquals(123, configs.rewards().getInt("scratchcards.small.price"));
+        assertEquals(81.5, configs.rewards().getDouble("scratchcards.small.rewards.nothing.chance"));
+        for (String item : List.of("pass", "quests", "group_goals")) {
+            assertFalse(configs.gui().contains("board.items." + item));
+        }
+        assertEquals(7, configs.gui().getInt("board.items.jackpots.slot"));
+        assertTrue(configs.gui().getStringList("shop.info.lore").contains("Im Besitz: %owned%"));
+        assertFalse(configs.gui().saveToString().contains("%owned_limit%"));
+        for (String name : List.of("language_de.yml", "language_en.yml")) {
+            YamlConfiguration language = YamlConfiguration.loadConfiguration(directory.resolve(name).toFile());
+            assertEquals("Mein eigener Gewinntext", language.getString("reward_win"));
+            assertFalse(language.getKeys(false).stream().anyMatch(key ->
+                    key.matches("(?:risk|pass|quests?|series|streak|pity|group_goal)_.*") || key.equals("owned_limit")));
+            List<String> help = language.getStringList("help");
+            assertTrue(help.contains("Custom help"));
+            assertFalse(help.stream().anyMatch(line -> line.matches(".*?/(?:rubbellos|rubellos|scratchcard) (?:risk|pass|quests|series) .*")));
+            assertFalse(help.stream().anyMatch(line -> line.contains("Pass-/Ziel")));
+        }
+        for (String name : List.of("config.yml", "gui.yml", "language_de.yml", "language_en.yml")) {
+            String first = Files.readString(directory.resolve(name));
+            configs.load();
+            assertEquals(first, Files.readString(directory.resolve(name)), name);
+        }
+    }
+
+    @Test
     void removesServerGoalAndItsMessagesFromExistingFilesWithoutChangingOtherSettings() throws Exception {
         YamlConfiguration config = new YamlConfiguration();
         config.set("server_goal.enabled", true);
@@ -167,7 +238,7 @@ class ConfigManagerTest {
 
         assertFalse(configs.config().contains("server_goal"));
         assertEquals(10, configs.config().getInt("limits.max_purchases_per_day"));
-        assertEquals(750, configs.config().getInt("group_goals.goals.open_100.target"));
+        assertFalse(configs.config().contains("group_goals"));
         for (String name : List.of("language_de.yml", "language_en.yml")) {
             YamlConfiguration language = YamlConfiguration.loadConfiguration(directory.resolve(name).toFile());
             assertFalse(language.contains("server_goal_completed"));

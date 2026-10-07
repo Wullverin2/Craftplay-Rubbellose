@@ -37,6 +37,9 @@ class ScratchcardSessionManagerTest {
         YamlConfiguration config = new YamlConfiguration();
         config.set("limits.enabled", true);
         config.set("limits.max_opens_per_day", 1);
+        config.set("pity.enabled", true);
+        config.set("pity.after_losses", 1);
+        config.set("pity.guaranteed_reward", "coins_100");
         config.set("cooldown.open_seconds", 0);
         config.set("scratchcard.loading.enabled", false);
         when(configs.config()).thenReturn(config);
@@ -54,29 +57,30 @@ class ScratchcardSessionManagerTest {
         when(items.readType(item)).thenReturn(Optional.of("small"));
         Reward reward = mock(Reward.class);
         when(reward.id()).thenReturn("nothing");
+        Reward guaranteed = mock(Reward.class);
+        when(guaranteed.id()).thenReturn("coins_100");
+        when(guaranteed.isWin()).thenReturn(true);
         ScratchcardType type = new ScratchcardType("small", "Small", Material.PAPER, Material.PAPER,
-                500, true, 0, 0, List.of(reward));
+                500, true, 0, 0, List.of(reward, guaranteed));
         RewardManager rewards = mock(RewardManager.class);
         when(rewards.type("small")).thenReturn(Optional.of(type));
         when(rewards.chooseReward(eq(type), anyDouble())).thenReturn(reward);
         when(rewards.createSymbols(type, reward, 9, 3)).thenReturn(Collections.nCopies(9, "nothing"));
         FeatureService features = mock(FeatureService.class);
         when(features.isTypeAvailable(type)).thenReturn(true);
-        ProgressionService progression = mock(ProgressionService.class);
-        when(progression.pityThreshold()).thenReturn(10);
         GuiManager gui = mock(GuiManager.class);
         when(gui.scratchSlots()).thenReturn(List.of(10, 11, 12, 19, 20, 21, 28, 29, 30));
         DatabaseManager database = mock(DatabaseManager.class);
         LanguageManager language = mock(LanguageManager.class);
         ScratchcardSessionManager sessions = new ScratchcardSessionManager(mock(CraftplayScratchcardsPlugin.class), configs,
                 language, database, mock(EconomyManager.class), rewards, items, gui, mock(DiagnosticLogger.class),
-                mock(FeedbackService.class), features, progression);
+                mock(FeedbackService.class), features);
 
         sessions.startFromHand(player, EquipmentSlot.HAND);
         sessions.startFromHand(player, EquipmentSlot.HAND);
 
         verify(item).setAmount(1);
-        verify(database).savePending(any());
+        verify(database).savePending(argThat(pending -> pending.rewardId().equals("nothing")));
         verify(database).recordOpen(uuid, "Player", "small");
         verify(database, never()).countOpensSince(any(), anyLong());
         verify(gui).openScratchcard(eq(player), any(ScratchcardSession.class));
@@ -85,12 +89,18 @@ class ScratchcardSessionManagerTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {0, 100})
-    void finishingTicketOnlyPaysItsPrizeWithoutOnlineBonusOrServerGoalBroadcast(double prizeMoney) {
+    void finishingTicketOnlyPaysItsPrizeWithoutRiskOrProgressionBonuses(double prizeMoney) {
         YamlConfiguration config = new YamlConfiguration();
         config.set("scratchcard.loading.enabled", false);
         config.set("scratchcard.gui.required_opened_fields", 1);
         config.set("scratchcard.gui.auto_close_after_payout_ticks", 0);
         // Auch eine noch nicht migrierte alte Konfiguration darf keinen Bonus mehr ausloesen.
+        for (String feature : List.of("pass", "quests", "streak", "series", "risk", "pity", "group_goals")) {
+            config.set(feature + ".enabled", true);
+        }
+        config.set("pass.xp.open", 100);
+        config.set("pass.xp.win", 100);
+        config.set("risk.minimum_money", 1);
         config.set("server_goal.enabled", true);
         config.set("server_goal.target_opens", 1);
         config.set("server_goal.reward_money_online", 2500);
@@ -124,8 +134,6 @@ class ScratchcardSessionManagerTest {
         when(features.isTypeAvailable(type)).thenReturn(true);
         when(features.rollMysteryMultiplier(player, reward)).thenReturn(1.0);
         when(features.luckyMoneyMultiplier()).thenReturn(1.0);
-        ProgressionService progression = mock(ProgressionService.class);
-        when(progression.pityThreshold()).thenReturn(10);
         GuiManager gui = mock(GuiManager.class);
         when(gui.scratchSlots()).thenReturn(List.of(10));
         when(gui.rewardAt(any(), eq(0))).thenReturn(reward);
@@ -136,7 +144,7 @@ class ScratchcardSessionManagerTest {
         when(language.message("field_revealed", Map.of())).thenReturn("%reward%");
         ScratchcardSessionManager sessions = new ScratchcardSessionManager(mock(CraftplayScratchcardsPlugin.class), configs,
                 language, database, economy, rewards, items, gui, mock(DiagnosticLogger.class),
-                mock(FeedbackService.class), features, progression);
+                mock(FeedbackService.class), features);
 
         try (var bukkit = mockStatic(Bukkit.class)) {
             sessions.startFromHand(player, EquipmentSlot.HAND);
@@ -151,11 +159,12 @@ class ScratchcardSessionManagerTest {
         verify(database).deletePending(uuid);
         verify(database, never()).countTotalOpens();
         verify(language, never()).send(any(), eq("server_goal_completed"), anyMap());
+        verify(language, never()).send(any(), matches("(?:pass|risk|series|streak|pity|quests?|group_goal)_.*"), anyMap());
+        verify(economy, never()).withdraw(any(), anyDouble());
         verify(features).isTypeAvailable(type);
         verify(features).luckyWinChanceMultiplier();
         verify(features).rollMysteryMultiplier(player, reward);
         verify(features).luckyMoneyMultiplier();
-        verify(features).handleSeries(player, type, reward);
         verifyNoMoreInteractions(features);
         assertFalse(sessions.hasOpenScratchcard(uuid));
     }

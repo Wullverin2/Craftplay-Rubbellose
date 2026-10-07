@@ -14,7 +14,6 @@ import de.craftplay.scratchcards.papi.CpscPlaceholderExpansion;
 import de.craftplay.scratchcards.service.PurchaseService;
 import de.craftplay.scratchcards.service.FeedbackService;
 import de.craftplay.scratchcards.service.FeatureService;
-import de.craftplay.scratchcards.service.ProgressionService;
 import de.craftplay.scratchcards.service.RewardManager;
 import de.craftplay.scratchcards.service.ScratchcardItemFactory;
 import de.craftplay.scratchcards.service.ScratchcardSessionManager;
@@ -36,7 +35,6 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
     private PurchaseService purchaseService;
     private FeedbackService feedbackService;
     private FeatureService featureService;
-    private ProgressionService progressionService;
     private ScratchcardSessionManager sessionManager;
     private CpscPlaceholderExpansion placeholderExpansion;
 
@@ -63,12 +61,11 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
 
             itemFactory = new ScratchcardItemFactory(this, configManager);
             feedbackService = new FeedbackService(configManager);
-            featureService = new FeatureService(configManager, languageManager, databaseManager, economyManager);
-            progressionService = new ProgressionService(configManager, languageManager, databaseManager, economyManager);
-            guiManager = new GuiManager(configManager, rewardManager, databaseManager, itemFactory, featureService, progressionService);
-            purchaseService = new PurchaseService(configManager, languageManager, databaseManager, economyManager, itemFactory, feedbackService, featureService, progressionService, diagnosticLogger);
+            featureService = new FeatureService(configManager, languageManager);
+            guiManager = new GuiManager(configManager, rewardManager, databaseManager, itemFactory, featureService);
+            purchaseService = new PurchaseService(configManager, languageManager, databaseManager, economyManager, itemFactory, feedbackService, featureService, diagnosticLogger);
             sessionManager = new ScratchcardSessionManager(this, configManager, languageManager, databaseManager,
-                    economyManager, rewardManager, itemFactory, guiManager, diagnosticLogger, feedbackService, featureService, progressionService);
+                    economyManager, rewardManager, itemFactory, guiManager, diagnosticLogger, feedbackService, featureService);
 
             registerCommands();
             registerListeners();
@@ -111,7 +108,7 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
 
     private void registerCommands() {
         ScratchcardCommand command = new ScratchcardCommand(this::reloadRuntimeConfiguration, getDescription().getVersion(), configManager,
-                languageManager, diagnosticLogger, economyManager, rewardManager, purchaseService, sessionManager, guiManager, databaseManager, featureService, progressionService, itemFactory);
+                languageManager, diagnosticLogger, economyManager, rewardManager, purchaseService, sessionManager, guiManager, databaseManager, featureService, itemFactory);
         CommandMapRepair commandMapRepair = new CommandMapRepair(this, diagnosticLogger);
         commandMapRepair.unregisterLegacy("rubellos");
         registerPluginCommand("rubbellos", command);

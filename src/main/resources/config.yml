@@ -42,11 +42,9 @@ limits:
   enabled: true
   # Das Kauf-Tageslimit wird um 00:00 Uhr nach Rootserver-/JVM-Zeit zurueckgesetzt.
   max_purchases_per_day: 25
-  # 0 deaktiviert das Besitzlimit. Gezaehlt werden echte Rubellos-Items mit Plugin-Markierung im Inventar.
-  max_owned_scratchcards: 64
 
 purchases:
-  # Maximal gleichzeitig kaufbare Lose; Kauf- und Besitzlimit gelten fuer jedes einzelne Los.
+  # Maximal gleichzeitig kaufbare Lose; das Tageskauflimit gilt für jedes einzelne Los.
   max_amount_per_purchase: 64
 
 cooldown:
@@ -58,7 +56,6 @@ daily:
   type: small
   amount: 1
   require_inventory_space: true
-  respect_owned_limit: true
   notify_on_join: true
 
 feedback:
@@ -161,125 +158,6 @@ mystery_multiplier:
     triple:
       value: 3.0
       chance: 3.0
-
-streak:
-  enabled: true
-  reward_every_days: 7
-  reward:
-    money: 2500
-    commands:
-      - "crate key give %player% vote 1"
-
-series:
-  enabled: true
-  sets:
-    small_starter:
-      enabled: true
-      display_name: "&aKleine Starter-Serie"
-      type: small
-      required_rewards:
-        - coins_100
-        - coins_500
-        - coins_1500
-        - vote_key
-        - jackpot
-      completion:
-        money: 5000
-        commands: []
-        broadcast: true
-    premium_master:
-      enabled: true
-      display_name: "&dPremium Meister-Serie"
-      type: premium
-      required_rewards:
-        - coins_2500
-        - coins_7500
-        - coins_20000
-        - epic_key
-        - jackpot
-      completion:
-        money: 25000
-        commands:
-          - "crate key give %player% epic 1"
-        broadcast: true
-
-pass:
-  enabled: true
-  season_id: "season_1"
-  season_name: "Rubellos Saison 1"
-  xp:
-    buy: 10
-    open: 15
-    win: 25
-    jackpot: 250
-    daily: 20
-  levels:
-    1:
-      required_xp: 100
-      money: 1000
-      commands: []
-    5:
-      required_xp: 750
-      money: 2500
-      commands:
-        - "crate key give %player% vote 2"
-    10:
-      required_xp: 2500
-      money: 10000
-      commands:
-        - "rubbellos give %player% premium 1"
-
-quests:
-  enabled: true
-  daily:
-    buy_3:
-      enabled: true
-      display_name: "&eKaufe 3 Lose"
-      event: buy
-      target: 3
-      reward:
-        money: 500
-        commands: []
-    open_5:
-      enabled: true
-      display_name: "&aÖffne 5 Lose"
-      event: open
-      target: 5
-      reward:
-        money: 1000
-        commands: []
-    win_2:
-      enabled: true
-      display_name: "&6Gewinne 2x"
-      event: win
-      target: 2
-      reward:
-        money: 1500
-        commands: []
-
-pity:
-  enabled: true
-  after_losses: 10
-  guaranteed_reward: "coins_100"
-
-group_goals:
-  enabled: true
-  goals:
-    daily_opens:
-      enabled: true
-      display_name: "&6Gemeinsam 100 Lose öffnen"
-      event: open
-      target: 100
-      reward:
-        money: 1000
-        commands: []
-
-risk:
-  enabled: true
-  minimum_money: 100
-  expire_seconds: 60
-  win_chance: 50.0
-  multiplier: 2.0
 
 stats:
   top_winners_limit: 10

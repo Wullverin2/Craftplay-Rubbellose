@@ -7,15 +7,11 @@ import de.craftplay.scratchcards.diagnostic.DiagnosticLogger;
 import de.craftplay.scratchcards.economy.EconomyManager;
 import de.craftplay.scratchcards.gui.GuiManager;
 import de.craftplay.scratchcards.model.PlayerStats;
-import de.craftplay.scratchcards.model.PassProgress;
-import de.craftplay.scratchcards.model.QuestProgress;
 import de.craftplay.scratchcards.model.Reward;
 import de.craftplay.scratchcards.model.ServerStats;
-import de.craftplay.scratchcards.model.SeriesProgress;
 import de.craftplay.scratchcards.model.ScratchcardType;
 import de.craftplay.scratchcards.service.FeatureService;
 import de.craftplay.scratchcards.service.PurchaseService;
-import de.craftplay.scratchcards.service.ProgressionService;
 import de.craftplay.scratchcards.service.RewardManager;
 import de.craftplay.scratchcards.service.ScratchcardItemFactory;
 import de.craftplay.scratchcards.service.ScratchcardSessionManager;
@@ -48,7 +44,6 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
     private final GuiManager guiManager;
     private final DatabaseManager databaseManager;
     private final FeatureService featureService;
-    private final ProgressionService progressionService;
     private final ScratchcardItemFactory itemFactory;
 
     public ScratchcardCommand(Runnable reloadAction, String pluginVersion, ConfigManager configManager, LanguageManager languageManager,
@@ -57,7 +52,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
                               RewardManager rewardManager, PurchaseService purchaseService,
                               ScratchcardSessionManager sessionManager, GuiManager guiManager,
                               DatabaseManager databaseManager, FeatureService featureService,
-                              ProgressionService progressionService, ScratchcardItemFactory itemFactory) {
+                              ScratchcardItemFactory itemFactory) {
         this.reloadAction = reloadAction;
         this.pluginVersion = pluginVersion;
         this.configManager = configManager;
@@ -70,7 +65,6 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
         this.guiManager = guiManager;
         this.databaseManager = databaseManager;
         this.featureService = featureService;
-        this.progressionService = progressionService;
         this.itemFactory = itemFactory;
     }
 
@@ -111,11 +105,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
             case "jackpots" -> jackpots(sender);
             case "history" -> history(sender);
             case "daily" -> daily(sender);
-            case "series" -> series(sender);
-            case "pass" -> pass(sender);
-            case "quests" -> quests(sender);
             case "board" -> board(sender);
-            case "risk" -> risk(sender);
             case "gift" -> gift(sender, args);
             case "simulate" -> simulate(sender, args);
             case "resetpending" -> resetPending(sender, args);
@@ -204,8 +194,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
                 "%amount%", String.valueOf(result.given()),
                 "%requested%", String.valueOf(result.requested()),
                 "%given%", String.valueOf(result.given()),
-                "%owned%", String.valueOf(result.ownedAfter()),
-                "%owned_limit%", result.maxOwned() > 0 ? String.valueOf(result.maxOwned()) : "-"
+                "%owned%", String.valueOf(itemFactory.countOwned(target))
         );
         if (result.given() <= 0) {
             languageManager.send(sender, "give_limited", placeholders);
@@ -304,7 +293,6 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Limits", "%value%", String.valueOf(configManager.config().getBoolean("limits.enabled", true))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Käufe pro Tag", "%value%", String.valueOf(configManager.config().getInt("limits.max_purchases_per_day", 25))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Maximale Kaufmenge", "%value%", String.valueOf(configManager.config().getInt("purchases.max_amount_per_purchase", 64))));
-        languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Besitzlimit", "%value%", String.valueOf(configManager.config().getInt("limits.max_owned_scratchcards", 64))));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Daily-Los", "%value%", configManager.config().getBoolean("daily.enabled", true)
                 + " typ=" + configManager.config().getString("daily.type", "small")));
         languageManager.send(sender, "debug_line", TextUtil.placeholders("%key%", "Sprache", "%value%", configManager.config().getString("language.default", "de")));
@@ -367,76 +355,12 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
         purchaseService.claimDaily(player, type);
     }
 
-    private void series(CommandSender sender) {
-        if (!(sender instanceof Player player)) {
-            languageManager.send(sender, "only_players");
-            return;
-        }
-        languageManager.send(player, "series_header");
-        List<SeriesProgress> progress = featureService.seriesProgress(player.getUniqueId());
-        if (progress.isEmpty()) {
-            languageManager.send(player, "series_empty");
-            return;
-        }
-        for (SeriesProgress entry : progress) {
-            String status = languageManager.message(entry.completed() ? "series_status_completed" : "series_status_open", Map.of());
-            languageManager.send(player, "series_line", TextUtil.placeholders(
-                    "%series%", entry.displayName(),
-                    "%collected%", String.valueOf(entry.collected()),
-                    "%required%", String.valueOf(entry.required()),
-                    "%status%", status
-            ));
-        }
-    }
-
-    private void pass(CommandSender sender) {
-        if (!(sender instanceof Player player)) {
-            languageManager.send(sender, "only_players");
-            return;
-        }
-        PassProgress progress = progressionService.passProgress(player.getUniqueId());
-        languageManager.send(player, "pass_info", TextUtil.placeholders(
-                "%season%", configManager.config().getString("pass.season_name", progress.season()),
-                "%xp%", String.valueOf(progress.xp()),
-                "%claimed_levels%", String.valueOf(progress.claimedLevels())
-        ));
-    }
-
-    private void quests(CommandSender sender) {
-        if (!(sender instanceof Player player)) {
-            languageManager.send(sender, "only_players");
-            return;
-        }
-        languageManager.send(player, "quests_header");
-        List<QuestProgress> quests = progressionService.dailyQuests(player.getUniqueId(), player.getName());
-        if (quests.isEmpty()) {
-            languageManager.send(player, "quests_empty");
-            return;
-        }
-        for (QuestProgress quest : quests) {
-            languageManager.send(player, "quests_line", TextUtil.placeholders(
-                    "%quest%", quest.displayName(),
-                    "%progress%", String.valueOf(quest.progress()),
-                    "%target%", String.valueOf(quest.target()),
-                    "%status%", languageManager.message(quest.completed() ? "quest_status_completed" : "quest_status_open", Map.of())
-            ));
-        }
-    }
-
     private void board(CommandSender sender) {
         if (!(sender instanceof Player player)) {
             languageManager.send(sender, "only_players");
             return;
         }
         guiManager.openBoard(player);
-    }
-
-    private void risk(CommandSender sender) {
-        if (!(sender instanceof Player player)) {
-            languageManager.send(sender, "only_players");
-            return;
-        }
-        progressionService.playRisk(player);
     }
 
     private void gift(CommandSender sender, String[] args) {
@@ -563,7 +487,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
     public List<String> tabComplete(CommandSender sender, String label, String[] args) {
         try {
             if (args.length == 1) {
-                return filter(List.of("shop", "buy", "claim", "daily", "history", "series", "pass", "quests", "board", "risk", "gift", "simulate",
+                return filter(List.of("shop", "buy", "claim", "daily", "history", "board", "gift", "simulate",
                         "give", "reload", "stats", "info", "list", "debug", "jackpots", "resetpending", "help"), args[0]);
             }
             if (args.length == 2 && args[0].equalsIgnoreCase("buy")) {

@@ -84,7 +84,7 @@ class DatabaseManagerTest {
     }
 
     @Test
-    void newDatabaseDoesNotCreateServerGoalsTableButKeepsStatisticsAndGroupGoals() throws Exception {
+    void newDatabaseOnlyCreatesLotteryAndStatisticsTables() throws Exception {
         try (var connection = DriverManager.getConnection("jdbc:sqlite:" + directory.resolve("scratchcards.db"));
              var statement = connection.createStatement();
              var tables = statement.executeQuery("SELECT name FROM sqlite_master WHERE type = 'table'")) {
@@ -92,20 +92,27 @@ class DatabaseManagerTest {
             while (tables.next()) {
                 names.add(tables.getString("name"));
             }
-            assertFalse(names.contains("cpsc_server_goals"));
-            assertTrue(names.contains("cpsc_group_goals"));
-            assertTrue(names.contains("cpsc_player_stats"));
-            assertTrue(names.contains("cpsc_opens"));
+            for (String table : java.util.List.of("server_goals", "group_goals", "pass_progress", "risk_offers",
+                    "quest_progress", "daily_streaks", "series_symbols", "series_claims", "pity_counters")) {
+                assertFalse(names.contains("cpsc_" + table), table);
+            }
+            for (String table : java.util.List.of("player_stats", "opens", "purchases", "rewards_log", "pending_cards", "daily_claims")) {
+                assertTrue(names.contains("cpsc_" + table), table);
+            }
         }
     }
 
     @Test
-    void existingServerGoalHistoryAndPlayerStatisticsAreNotDeletedOnStartup() throws Exception {
+    void existingRetiredFeatureHistoryAndPlayerStatisticsAreNotDeletedOnStartup() throws Exception {
         assertTrue(database.recordPurchases(uuid, "Player", "small", 500, 2));
         try (var connection = DriverManager.getConnection("jdbc:sqlite:" + directory.resolve("scratchcards.db"));
              var statement = connection.createStatement()) {
             statement.execute("CREATE TABLE cpsc_server_goals (goal_id VARCHAR(64) PRIMARY KEY, opened_count BIGINT, completed_at BIGINT)");
             statement.execute("INSERT INTO cpsc_server_goals VALUES ('old_goal', 500, 1)");
+            statement.execute("CREATE TABLE cpsc_pass_progress (uuid VARCHAR(36), xp INT)");
+            statement.execute("INSERT INTO cpsc_pass_progress VALUES ('old_player', 100)");
+            statement.execute("CREATE TABLE cpsc_risk_offers (uuid VARCHAR(36), amount DOUBLE)");
+            statement.execute("INSERT INTO cpsc_risk_offers VALUES ('old_player', 750)");
         }
         database.close();
         database.initialize();
@@ -115,6 +122,17 @@ class DatabaseManagerTest {
              var result = statement.executeQuery("SELECT opened_count FROM cpsc_server_goals WHERE goal_id = 'old_goal'")) {
             assertTrue(result.next());
             assertEquals(500, result.getLong(1));
+        }
+        try (var connection = DriverManager.getConnection("jdbc:sqlite:" + directory.resolve("scratchcards.db"));
+             var statement = connection.createStatement()) {
+            try (var result = statement.executeQuery("SELECT xp FROM cpsc_pass_progress")) {
+                assertTrue(result.next());
+                assertEquals(100, result.getInt(1));
+            }
+            try (var result = statement.executeQuery("SELECT amount FROM cpsc_risk_offers")) {
+                assertTrue(result.next());
+                assertEquals(750, result.getDouble(1));
+            }
         }
         assertEquals(2, database.getPlayerStats(uuid, "Player").bought());
         assertEquals(1000, database.getServerStats(10).totalIncome());

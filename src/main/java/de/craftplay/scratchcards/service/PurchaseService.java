@@ -25,14 +25,13 @@ public final class PurchaseService {
     private final ScratchcardItemFactory itemFactory;
     private final FeedbackService feedbackService;
     private final FeatureService featureService;
-    private final ProgressionService progressionService;
     private final DiagnosticLogger diagnosticLogger;
     private final Map<UUID, Long> buyCooldowns = new HashMap<>();
 
     public PurchaseService(ConfigManager configManager, LanguageManager languageManager, DatabaseManager databaseManager,
                            EconomyManager economyManager, ScratchcardItemFactory itemFactory,
                            FeedbackService feedbackService, FeatureService featureService,
-                           ProgressionService progressionService, DiagnosticLogger diagnosticLogger) {
+                           DiagnosticLogger diagnosticLogger) {
         this.configManager = configManager;
         this.languageManager = languageManager;
         this.databaseManager = databaseManager;
@@ -40,7 +39,6 @@ public final class PurchaseService {
         this.itemFactory = itemFactory;
         this.feedbackService = feedbackService;
         this.featureService = featureService;
-        this.progressionService = progressionService;
         this.diagnosticLogger = diagnosticLogger;
     }
 
@@ -75,12 +73,6 @@ public final class PurchaseService {
         if (configManager.config().getBoolean("limits.enabled", true)) {
             if (perDay > 0 && amount > perDay - boughtToday) {
                 languageManager.send(player, "purchase_limit_day", dailyLimitPlaceholders(boughtToday, perDay));
-                return false;
-            }
-            int maxOwned = configManager.config().getInt("limits.max_owned_scratchcards", 64);
-            int owned = itemFactory.countOwned(player);
-            if (maxOwned > 0 && amount > maxOwned - owned) {
-                languageManager.send(player, "owned_limit", ownedLimitPlaceholders(owned, maxOwned));
                 return false;
             }
         }
@@ -149,7 +141,6 @@ public final class PurchaseService {
                         ? String.valueOf(Math.max(0, perDay - boughtTodayAfterPurchase)) : "-"
         ));
         feedbackService.play(player, "buy");
-        progressionService.onBuy(player, amount);
         return true;
     }
 
@@ -164,15 +155,10 @@ public final class PurchaseService {
 
     public GiveResult give(Player target, ScratchcardType type, int amount) {
         int requested = Math.max(1, amount);
-        int ownedBefore = itemFactory.countOwned(target);
-        int maxOwned = configManager.config().getBoolean("limits.enabled", true)
-                ? configManager.config().getInt("limits.max_owned_scratchcards", 64)
-                : 0;
-        int allowedByOwnership = maxOwned > 0 ? Math.max(0, maxOwned - ownedBefore) : requested;
         int freeCapacity = itemFactory.freeCapacity(target, type);
-        int given = Math.min(requested, Math.min(allowedByOwnership, freeCapacity));
+        int given = Math.min(requested, freeCapacity);
         addExact(target, type, given);
-        return new GiveResult(requested, given, ownedBefore, itemFactory.countOwned(target), maxOwned);
+        return new GiveResult(requested, given);
     }
 
     public void claimDaily(Player player, ScratchcardType type) {
@@ -194,15 +180,6 @@ public final class PurchaseService {
             return;
         }
         int amount = Math.max(1, configManager.config().getInt("daily.amount", 1));
-        if (configManager.config().getBoolean("limits.enabled", true)
-                && configManager.config().getBoolean("daily.respect_owned_limit", true)) {
-            int maxOwned = configManager.config().getInt("limits.max_owned_scratchcards", 64);
-            int owned = itemFactory.countOwned(player);
-            if (maxOwned > 0 && owned + amount > maxOwned) {
-                languageManager.send(player, "owned_limit", ownedLimitPlaceholders(owned, maxOwned));
-                return;
-            }
-        }
         if (configManager.config().getBoolean("daily.require_inventory_space", true)
                 && !itemFactory.canFit(player, type, amount)) {
             languageManager.send(player, "inventory_full");
@@ -210,13 +187,11 @@ public final class PurchaseService {
         }
         addExact(player, type, amount);
         databaseManager.recordDailyClaim(player.getUniqueId(), player.getName(), type.id(), amount);
-        featureService.updateDailyStreak(player);
         languageManager.send(player, "daily_claimed", TextUtil.placeholders(
                 "%type%", type.displayName(),
                 "%amount%", String.valueOf(amount)
         ));
         feedbackService.play(player, "daily");
-        progressionService.onDaily(player);
     }
 
     public boolean canClaimDaily(Player player) {
@@ -226,8 +201,9 @@ public final class PurchaseService {
 
     private void addExact(Player target, ScratchcardType type, int amount) {
         int remaining = Math.max(0, amount);
+        int stackSize = itemFactory.create(type, 1).getMaxStackSize();
         while (remaining > 0) {
-            int stackAmount = Math.min(64, remaining);
+            int stackAmount = Math.min(stackSize, remaining);
             Map<Integer, ItemStack> overflow = target.getInventory().addItem(itemFactory.create(type, stackAmount));
             for (ItemStack stack : overflow.values()) {
                 target.getWorld().dropItemNaturally(target.getLocation(), stack);
@@ -257,15 +233,7 @@ public final class PurchaseService {
         );
     }
 
-    private Map<String, String> ownedLimitPlaceholders(int owned, int maxOwned) {
-        return TextUtil.placeholders(
-                "%owned%", String.valueOf(owned),
-                "%owned_limit%", String.valueOf(maxOwned),
-                "%owned_remaining%", String.valueOf(Math.max(0, maxOwned - owned))
-        );
-    }
-
-    public record GiveResult(int requested, int given, int ownedBefore, int ownedAfter, int maxOwned) {
+    public record GiveResult(int requested, int given) {
         public boolean limited() {
             return given < requested;
         }

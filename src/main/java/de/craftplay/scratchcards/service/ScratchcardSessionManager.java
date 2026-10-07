@@ -39,7 +39,6 @@ public final class ScratchcardSessionManager {
     private final DiagnosticLogger diagnosticLogger;
     private final FeedbackService feedbackService;
     private final FeatureService featureService;
-    private final ProgressionService progressionService;
     private final Map<UUID, ScratchcardSession> activeSessions = new HashMap<>();
     private final Map<UUID, Long> openCooldowns = new HashMap<>();
 
@@ -48,7 +47,7 @@ public final class ScratchcardSessionManager {
                                      EconomyManager economyManager, RewardManager rewardManager,
                                      ScratchcardItemFactory itemFactory, GuiManager guiManager,
                                      DiagnosticLogger diagnosticLogger, FeedbackService feedbackService,
-                                     FeatureService featureService, ProgressionService progressionService) {
+                                     FeatureService featureService) {
         this.plugin = plugin;
         this.configManager = configManager;
         this.languageManager = languageManager;
@@ -60,7 +59,6 @@ public final class ScratchcardSessionManager {
         this.diagnosticLogger = diagnosticLogger;
         this.feedbackService = feedbackService;
         this.featureService = featureService;
-        this.progressionService = progressionService;
     }
 
     public void startFromHand(Player player, EquipmentSlot hand) {
@@ -94,20 +92,6 @@ public final class ScratchcardSessionManager {
         removeOne(player, hand);
         ScratchcardType type = optionalType.get();
         Reward reward = rewardManager.chooseReward(type, featureService.luckyWinChanceMultiplier());
-        int pityLosses = progressionService.pityLosses(player.getUniqueId(), type.id());
-        if (pityLosses + 1 >= progressionService.pityThreshold()) {
-            Reward guaranteed = type.rewardById(progressionService.guaranteedRewardId());
-            if (guaranteed == null || !guaranteed.isWin()) {
-                guaranteed = type.rewards().stream().filter(Reward::isWin).findFirst().orElse(guaranteed);
-            }
-            if (guaranteed != null && guaranteed.isWin()) {
-                reward = guaranteed;
-                languageManager.send(player, "pity_guaranteed", TextUtil.placeholders(
-                        "%reward%", guaranteed.displayName(),
-                        "%losses%", String.valueOf(pityLosses)
-                ));
-            }
-        }
         int fieldCount = Math.max(1, guiManager.scratchSlots().size());
         int winningMatches = Math.max(2, configManager.config().getInt("scratchcard.result.winning_matches", 3));
         List<String> symbols = rewardManager.createSymbols(type, reward, fieldCount, winningMatches);
@@ -117,7 +101,6 @@ public final class ScratchcardSessionManager {
         activeSessions.put(player.getUniqueId(), session);
         databaseManager.savePending(session.toPending());
         databaseManager.recordOpen(player.getUniqueId(), player.getName(), type.id());
-        progressionService.onOpen(player);
         openCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
         languageManager.send(player, "started");
         feedbackService.play(player, "start");
@@ -291,13 +274,6 @@ public final class ScratchcardSessionManager {
         databaseManager.deletePending(player.getUniqueId());
         activeSessions.remove(player.getUniqueId());
         guiManager.refreshScratchcard(session);
-        featureService.handleSeries(player, session.type(), reward);
-        progressionService.updatePity(player, session.type().id(), reward.isWin());
-        if (reward.isWin()) {
-            progressionService.onWin(player, reward.broadcast());
-        }
-        progressionService.addRiskOffer(player, finalMoney, rewardName);
-
         if (reward.isWin()) {
             languageManager.send(player, "reward_win", TextUtil.placeholders(
                     "%reward%", rewardName,

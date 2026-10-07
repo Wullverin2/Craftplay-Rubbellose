@@ -53,7 +53,7 @@ shop:
       - "&7Käufe heute: &e%daily_bought%/%daily_limit%"
       - "&7Geöffnet heute: &e%daily_opened%"
       - "&7Gratis-Los: &e%daily_status%"
-      - "&7Im Besitz: &e%owned%/%owned_limit%"
+      - "&7Im Besitz: &e%owned%"
 
 jackpots:
   title: "&8Jackpot-Historie"
@@ -157,26 +157,6 @@ board:
         - "&7Geöffnete Lose gesamt: &e%total_opens%"
         - "&7Letzte Jackpots:"
         - "&f%latest_jackpots%"
-    pass:
-      slot: 13
-      material: EXPERIENCE_BOTTLE
-      name: "&6Rubellos-Pass"
-      lore:
-        - "&7Saison: &e%pass_season%"
-        - "&7XP: &e%pass_xp%"
-        - "&7Belohnte Level: &e%pass_claimed_levels%"
-    quests:
-      slot: 15
-      material: WRITABLE_BOOK
-      name: "&aTägliche Aufträge"
-      lore:
-        - "&f%quests%"
-    group_goals:
-      slot: 21
-      material: BEACON
-      name: "&bGruppenziele"
-      lore:
-        - "&f%group_goals%"
     lucky_hour:
       slot: 23
       material: CLOCK

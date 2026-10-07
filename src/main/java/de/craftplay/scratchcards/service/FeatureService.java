@@ -2,39 +2,24 @@ package de.craftplay.scratchcards.service;
 
 import de.craftplay.scratchcards.config.ConfigManager;
 import de.craftplay.scratchcards.config.LanguageManager;
-import de.craftplay.scratchcards.database.DatabaseManager;
-import de.craftplay.scratchcards.economy.EconomyManager;
-import de.craftplay.scratchcards.model.DailyStreak;
 import de.craftplay.scratchcards.model.Reward;
 import de.craftplay.scratchcards.model.ScratchcardType;
-import de.craftplay.scratchcards.model.SeriesProgress;
-import de.craftplay.scratchcards.util.ServerDayUtil;
 import de.craftplay.scratchcards.util.TextUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class FeatureService {
     private final ConfigManager configManager;
     private final LanguageManager languageManager;
-    private final DatabaseManager databaseManager;
-    private final EconomyManager economyManager;
 
-    public FeatureService(ConfigManager configManager, LanguageManager languageManager,
-                          DatabaseManager databaseManager, EconomyManager economyManager) {
+    public FeatureService(ConfigManager configManager, LanguageManager languageManager) {
         this.configManager = configManager;
         this.languageManager = languageManager;
-        this.databaseManager = databaseManager;
-        this.economyManager = economyManager;
     }
 
     public double luckyWinChanceMultiplier() {
@@ -88,83 +73,6 @@ public final class FeatureService {
         return 1.0D;
     }
 
-    public DailyStreak updateDailyStreak(Player player) {
-        long today = ServerDayUtil.currentServerDayStartMillis();
-        long yesterday = ServerDayUtil.previousServerDayStartMillis();
-        DailyStreak previous = databaseManager.getDailyStreak(player.getUniqueId());
-        int current = previous.lastDayStart() == yesterday ? previous.current() + 1 : 1;
-        int best = Math.max(previous.best(), current);
-        DailyStreak updated = new DailyStreak(current, best, today);
-        databaseManager.saveDailyStreak(player.getUniqueId(), player.getName(), updated);
-        languageManager.send(player, "streak_progress", TextUtil.placeholders(
-                "%streak%", String.valueOf(updated.current()),
-                "%best_streak%", String.valueOf(updated.best())
-        ));
-        handleStreakReward(player, updated);
-        return updated;
-    }
-
-    public List<SeriesProgress> seriesProgress(UUID uuid) {
-        List<SeriesProgress> progress = new ArrayList<>();
-        ConfigurationSection sets = configManager.config().getConfigurationSection("series.sets");
-        if (sets == null) {
-            return progress;
-        }
-        for (String seriesId : sets.getKeys(false)) {
-            ConfigurationSection set = sets.getConfigurationSection(seriesId);
-            if (set == null || !set.getBoolean("enabled", true)) {
-                continue;
-            }
-            int required = set.getStringList("required_rewards").size();
-            int collected = Math.min(required, databaseManager.countSeriesSymbols(uuid, seriesId.toLowerCase(Locale.ROOT)));
-            progress.add(new SeriesProgress(
-                    seriesId.toLowerCase(Locale.ROOT),
-                    set.getString("display_name", seriesId),
-                    collected,
-                    required,
-                    databaseManager.hasSeriesClaim(uuid, seriesId.toLowerCase(Locale.ROOT))
-            ));
-        }
-        return progress;
-    }
-
-    public void handleSeries(Player player, ScratchcardType type, Reward reward) {
-        if (!configManager.config().getBoolean("series.enabled", true)) {
-            return;
-        }
-        ConfigurationSection sets = configManager.config().getConfigurationSection("series.sets");
-        if (sets == null) {
-            return;
-        }
-        for (String seriesId : sets.getKeys(false)) {
-            ConfigurationSection set = sets.getConfigurationSection(seriesId);
-            if (set == null || !set.getBoolean("enabled", true)) {
-                continue;
-            }
-            String configuredType = set.getString("type", "all");
-            if (!configuredType.equalsIgnoreCase("all") && !configuredType.equalsIgnoreCase(type.id())) {
-                continue;
-            }
-            String matchedSymbol = matchedSeriesSymbol(set.getStringList("required_rewards"), type, reward);
-            if (matchedSymbol == null) {
-                continue;
-            }
-            String normalizedSeries = seriesId.toLowerCase(Locale.ROOT);
-            boolean collected = databaseManager.collectSeriesSymbol(player.getUniqueId(), player.getName(), normalizedSeries, matchedSymbol);
-            if (collected) {
-                int current = databaseManager.countSeriesSymbols(player.getUniqueId(), normalizedSeries);
-                int required = set.getStringList("required_rewards").size();
-                languageManager.send(player, "series_symbol_collected", TextUtil.placeholders(
-                        "%series%", set.getString("display_name", seriesId),
-                        "%symbol%", reward.displayName(),
-                        "%collected%", String.valueOf(Math.min(current, required)),
-                        "%required%", String.valueOf(required)
-                ));
-            }
-            maybeCompleteSeries(player, normalizedSeries, set);
-        }
-    }
-
     public boolean isTypeAvailable(ScratchcardType type) {
         return type.isActive(System.currentTimeMillis());
     }
@@ -214,71 +122,6 @@ public final class FeatureService {
         } catch (DateTimeParseException exception) {
             return false;
         }
-    }
-
-    private String matchedSeriesSymbol(List<String> required, ScratchcardType type, Reward reward) {
-        String typed = (type.id() + ":" + reward.id()).toLowerCase(Locale.ROOT);
-        String plain = reward.id().toLowerCase(Locale.ROOT);
-        for (String entry : required) {
-            String normalized = entry.toLowerCase(Locale.ROOT);
-            if (normalized.equals(typed) || normalized.equals(plain)) {
-                return normalized;
-            }
-        }
-        return null;
-    }
-
-    private void maybeCompleteSeries(Player player, String seriesId, ConfigurationSection set) {
-        int required = set.getStringList("required_rewards").size();
-        if (required <= 0 || databaseManager.hasSeriesClaim(player.getUniqueId(), seriesId)) {
-            return;
-        }
-        int collected = databaseManager.countSeriesSymbols(player.getUniqueId(), seriesId);
-        if (collected < required) {
-            return;
-        }
-        databaseManager.markSeriesClaim(player.getUniqueId(), player.getName(), seriesId);
-        double money = set.getDouble("completion.money", 0.0D);
-        if (money > 0.0D) {
-            economyManager.deposit(player, money);
-        }
-        for (String command : set.getStringList("completion.commands")) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("%player%", player.getName()));
-        }
-        languageManager.send(player, "series_completed", TextUtil.placeholders(
-                "%series%", set.getString("display_name", seriesId),
-                "%money%", economyManager.format(money)
-        ));
-        if (set.getBoolean("completion.broadcast", true)) {
-            Bukkit.broadcastMessage(TextUtil.color(languageManager.message("series_broadcast", TextUtil.placeholders(
-                    "%player%", player.getName(),
-                    "%series%", set.getString("display_name", seriesId),
-                    "%money%", economyManager.format(money)
-            ))));
-        }
-    }
-
-    private void handleStreakReward(Player player, DailyStreak streak) {
-        if (!configManager.config().getBoolean("streak.enabled", true)) {
-            return;
-        }
-        int everyDays = Math.max(1, configManager.config().getInt("streak.reward_every_days", 7));
-        if (streak.current() % everyDays != 0) {
-            return;
-        }
-        double money = configManager.config().getDouble("streak.reward.money", 0.0D);
-        if (money > 0.0D) {
-            economyManager.deposit(player, money);
-        }
-        for (String command : configManager.config().getStringList("streak.reward.commands")) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command
-                    .replace("%player%", player.getName())
-                    .replace("%streak%", String.valueOf(streak.current())));
-        }
-        languageManager.send(player, "streak_reward", TextUtil.placeholders(
-                "%streak%", String.valueOf(streak.current()),
-                "%money%", economyManager.format(money)
-        ));
     }
 
     private String formatMultiplier(double multiplier) {

@@ -1,6 +1,6 @@
 # Craftplay-Rubbellose
 
-Minecraft/Purpur-Plugin fuer Rubellose mit Vault-Economy, SQLite/MySQL, GUI-Shop, Actionbar-Ladebalken, Gewinnvorschau, Spielerprogression und persistenter Ergebnis-Sicherung.
+Minecraft/Purpur-Plugin fuer Rubellose mit Vault-Economy, SQLite/MySQL, GUI-Shop, Actionbar-Ladebalken, Gewinnvorschau und persistenter Ergebnis-Sicherung.
 
 ## Anforderungen
 
@@ -19,13 +19,13 @@ mvn package
 Die fertige Plugin-Datei liegt danach hier:
 
 ```text
-target/Craftplay-Rubbellose-0.3.5.jar
+target/Craftplay-Rubbellose-0.3.6.jar
 ```
 
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.5.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.6.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein Economy-Plugin installieren, falls noch nicht vorhanden.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.
@@ -49,11 +49,7 @@ target/Craftplay-Rubbellose-0.3.5.jar
 | `/rubbellos claim` | Offenes Rubellos fortsetzen |
 | `/rubbellos daily` | Taegliches Gratis-Los abholen |
 | `/rubbellos history` | Eigene Gewinn-Historie anzeigen |
-| `/rubbellos series` | Rubellos-Serien anzeigen |
-| `/rubbellos pass` | Rubellos-Pass anzeigen |
-| `/rubbellos quests` | Taegliche Auftraege anzeigen |
-| `/rubbellos board` | Jackpot-, Pass- und Ziel-Board oeffnen |
-| `/rubbellos risk` | Letzten Geldgewinn riskieren |
+| `/rubbellos board` | Jackpot- und Lucky-Hour-Board öffnen |
 | `/rubbellos gift <spieler> <typ> <anzahl>` | Eigene Lose verschenken |
 | `/rubbellos jackpots` | Jackpot-Historie oeffnen |
 | `/rubbellos stats` | Serverstatistik anzeigen |
@@ -93,19 +89,12 @@ Wenn PlaceholderAPI installiert ist, werden diese Platzhalter registriert:
 ## Spielerfeatures
 
 - Daily-Los mit taeglichem Reset nach Rootserver-/JVM-Zeit.
-- Kauf- und Besitzlimits ueber `config.yml`; kein Tageslimit fuer Oeffnungen.
+- Nur Käufe haben ein konfigurierbares Tageslimit; kein Besitz- oder Öffnungslimit.
 - Mehrfachkauf mit Mengenauswahl und Gesamtpreis im Shop.
 - Gewinnvorschau mit Seltenheiten und effektiven Chancen.
 - Lucky Hour mit konfigurierbarem Gewinnbonus.
-- Streak-System fuer regelmaessiges Oeffnen.
-- Rubellos-Serien mit Sammelfortschritt und Abschlussbelohnung.
 - Eventlose mit optionalem Ablaufdatum.
-- Gruppenziele mit Belohnungen für alle.
-- Rubellos-Pass mit XP, Leveln und Belohnungen.
-- Taegliche Quests fuer Spieler.
 - Mystery-Multiplikator fuer Geldgewinne.
-- Pity-System gegen lange Pechstrassen.
-- Risiko-Spiel fuer den letzten Geldgewinn.
 - Spieler koennen eigene Lose per `/rubbellos gift` verschenken.
 
 ## Bedrock/Geyser
@@ -118,13 +107,13 @@ Im Shop zuerst die Menge (standardmäßig 1, 5 oder 10) auswählen, dann den gew
 
 `purchases.max_amount_per_purchase` in `config.yml` begrenzt die Menge pro Kauf (Standard: 64). Mengen, Slots und Anzeigen stehen in `gui.yml` unter `shop.quantity_selector`; die Platzhalter `%amount%`, `%unit_price%` und `%total_price%` stehen fuer Kaufmenge, Einzelpreis und Gesamtpreis. `shop.quantity_selector.enabled: false` deaktiviert die Mengenauswahl im GUI, nicht den Kaufbefehl.
 
-Geld, Inventarplatz, Tageskauflimit und Besitzlimit muessen fuer die gesamte Menge reichen. Sonst wird nichts gekauft oder abgebucht. Der Standard erlaubt weiterhin 25 gekaufte Lose pro Tag, nicht 25 Kaufvorgaenge. Jedes Los zaehlt einzeln fuer Statistiken, Quests, Gruppenziele und Pass-XP. Bei einem Speicherfehler wird das Inventar zurueckgesetzt und eine Erstattung versucht; fehlgeschlagene Erstattungen werden protokolliert.
+Geld, Inventarplatz und Tageskauflimit müssen für die gesamte Menge reichen. Sonst wird nichts gekauft oder abgebucht. Der Standard erlaubt 25 gekaufte Lose pro Tag, nicht 25 Kaufvorgänge. Dein bereits eingestelltes Limit, etwa 10, bleibt beim Update erhalten. Jedes Los zählt einzeln für das Kauflimit und die normalen Statistiken. Es gibt keine XP oder Fortschrittsbelohnungen. Bei einem Speicherfehler wird das Inventar zurückgesetzt und eine Erstattung versucht; fehlgeschlagene Erstattungen werden protokolliert.
 
 Das bisherige `limits.max_opens_per_day` wird beim Start oder `/rubbellos reload` automatisch entfernt. Alle vorhandenen Lose koennen ohne Tages-Oeffnungslimit geoeffnet werden; Cooldown und Schutz vor mehreren gleichzeitig laufenden Losen bleiben erhalten. Bestehende eigene Einstellungen bleiben erhalten, neue Kaufoptionen werden automatisch ergaenzt.
 
 ## Sicherheitslogik
 
-Das frühere Serverziel mit Online-Bonus wurde ab Version 0.3.5 vollständig entfernt. Beim Start oder Reload werden `server_goal` sowie die zugehörigen Sprachtexte aus vorhandenen Dateien entfernt. Bereits ausgezahlte Coins und vorhandene Datenbankdaten werden nicht verändert. Gruppenziele sind eine separate Funktion und bleiben unverändert.
+Risiko-Spiel, Rubellos-Pass, XP, Quests, Serien, Streaks, Gruppenziele und Pity-Zähler sind entfernt. Es gibt keine Sammelfortschritte oder zusätzliche Erfolgsbelohnungen. Das frühere Serverziel mit Online-Bonus bleibt ebenfalls entfernt. Alte Funktions- und Besitzlimit-Einträge werden beim Start oder Reload automatisch aus Konfiguration, GUI und Sprachdateien entfernt. Preise, Gewinnchancen, Kauflimit und eigene übrige Einstellungen bleiben erhalten. Alte Datenbanktabellen werden nicht gelöscht, aber nicht mehr verwendet; ausgezahlte Coins, Gewinnhistorie und offene Lose bleiben erhalten.
 
 - Rubellose werden ueber den `PersistentDataContainer` markiert.
 - Umbenanntes Papier wird nicht akzeptiert.

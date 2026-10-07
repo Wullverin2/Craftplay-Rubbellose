@@ -4,14 +4,10 @@ import de.craftplay.scratchcards.config.ConfigManager;
 import de.craftplay.scratchcards.database.DatabaseManager;
 import de.craftplay.scratchcards.model.JackpotEntry;
 import de.craftplay.scratchcards.model.PlayerStats;
-import de.craftplay.scratchcards.model.GroupGoalProgress;
-import de.craftplay.scratchcards.model.PassProgress;
-import de.craftplay.scratchcards.model.QuestProgress;
 import de.craftplay.scratchcards.model.Reward;
 import de.craftplay.scratchcards.model.RewardHistoryEntry;
 import de.craftplay.scratchcards.model.ScratchcardType;
 import de.craftplay.scratchcards.service.FeatureService;
-import de.craftplay.scratchcards.service.ProgressionService;
 import de.craftplay.scratchcards.service.RewardManager;
 import de.craftplay.scratchcards.service.ScratchcardItemFactory;
 import de.craftplay.scratchcards.service.ScratchcardSession;
@@ -42,17 +38,14 @@ public final class GuiManager {
     private final DatabaseManager databaseManager;
     private final ScratchcardItemFactory itemFactory;
     private final FeatureService featureService;
-    private final ProgressionService progressionService;
 
     public GuiManager(ConfigManager configManager, RewardManager rewardManager, DatabaseManager databaseManager,
-                      ScratchcardItemFactory itemFactory, FeatureService featureService,
-                      ProgressionService progressionService) {
+                      ScratchcardItemFactory itemFactory, FeatureService featureService) {
         this.configManager = configManager;
         this.rewardManager = rewardManager;
         this.databaseManager = databaseManager;
         this.itemFactory = itemFactory;
         this.featureService = featureService;
-        this.progressionService = progressionService;
     }
 
     public void openShop(Player player) {
@@ -123,9 +116,6 @@ public final class GuiManager {
             }
         }
         setBoardItem(inventory, "board.items.jackpots", boardJackpotPlaceholders());
-        setBoardItem(inventory, "board.items.pass", boardPassPlaceholders(player));
-        setBoardItem(inventory, "board.items.quests", boardQuestPlaceholders(player));
-        setBoardItem(inventory, "board.items.group_goals", boardGroupGoalPlaceholders());
         setBoardItem(inventory, "board.items.lucky_hour", TextUtil.placeholders("%lucky_hour%", featureService.luckyHourName()));
         player.openInventory(inventory);
     }
@@ -258,7 +248,6 @@ public final class GuiManager {
         boolean limitsEnabled = configManager.config().getBoolean("limits.enabled", true);
         int purchaseLimit = limitsEnabled ? configManager.config().getInt("limits.max_purchases_per_day", 25) : 0;
         int owned = itemFactory.countOwned(player);
-        int ownedLimit = limitsEnabled ? configManager.config().getInt("limits.max_owned_scratchcards", 64) : 0;
         Map<String, String> placeholders = TextUtil.placeholders(
                 "%player%", player.getName(),
                 "%cpsc_bought%", String.valueOf(stats.bought()),
@@ -272,9 +261,7 @@ public final class GuiManager {
                 "%daily_opened%", String.valueOf(openedToday),
                 "%daily_available%", dailyAvailable ? "Ja" : "Nein",
                 "%daily_status%", dailyAvailable ? "Verfügbar" : "Abgeholt",
-                "%owned%", String.valueOf(owned),
-                "%owned_limit%", ownedLimit > 0 ? String.valueOf(ownedLimit) : "-",
-                "%owned_remaining%", ownedLimit > 0 ? String.valueOf(Math.max(0, ownedLimit - owned)) : "-"
+                "%owned%", String.valueOf(owned)
         );
         return namedItem("shop.info", placeholders);
     }
@@ -409,31 +396,6 @@ public final class GuiManager {
                 "%latest_jackpots%", jackpots.isEmpty() ? "-" : String.join(", ", jackpots),
                 "%total_opens%", String.valueOf(databaseManager.countTotalOpens())
         );
-    }
-
-    private Map<String, String> boardPassPlaceholders(Player player) {
-        PassProgress progress = progressionService.passProgress(player.getUniqueId());
-        return TextUtil.placeholders(
-                "%pass_season%", configManager.config().getString("pass.season_name", progress.season()),
-                "%pass_xp%", String.valueOf(progress.xp()),
-                "%pass_claimed_levels%", String.valueOf(progress.claimedLevels())
-        );
-    }
-
-    private Map<String, String> boardQuestPlaceholders(Player player) {
-        List<QuestProgress> quests = progressionService.dailyQuests(player.getUniqueId(), player.getName());
-        String value = quests.isEmpty() ? "-" : String.join(", ", quests.stream()
-                .map(quest -> quest.displayName() + " " + quest.progress() + "/" + quest.target())
-                .toList());
-        return TextUtil.placeholders("%quests%", value);
-    }
-
-    private Map<String, String> boardGroupGoalPlaceholders() {
-        List<GroupGoalProgress> goals = progressionService.groupGoals();
-        String value = goals.isEmpty() ? "-" : String.join(", ", goals.stream()
-                .map(goal -> goal.displayName() + " " + goal.progress() + "/" + goal.target())
-                .toList());
-        return TextUtil.placeholders("%group_goals%", value);
     }
 
     private ItemStack resultItem(ScratchcardSession session) {

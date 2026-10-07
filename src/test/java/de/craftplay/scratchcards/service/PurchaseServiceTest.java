@@ -34,7 +34,6 @@ class PurchaseServiceTest {
     private final ScratchcardItemFactory items = mock(ScratchcardItemFactory.class);
     private final FeedbackService feedback = mock(FeedbackService.class);
     private final FeatureService features = mock(FeatureService.class);
-    private final ProgressionService progression = mock(ProgressionService.class);
     private final DiagnosticLogger diagnostics = mock(DiagnosticLogger.class);
     private final Player player = mock(Player.class);
     private final PlayerInventory inventory = mock(PlayerInventory.class);
@@ -67,16 +66,15 @@ class PurchaseServiceTest {
         when(economy.deposit(eq(player), anyDouble())).thenReturn(true);
         when(economy.format(anyDouble())).thenAnswer(invocation -> invocation.getArgument(0).toString());
         when(database.recordPurchases(eq(uuid), eq("Wullverin"), eq("small"), eq(500.0), anyInt())).thenReturn(true);
-        service = new PurchaseService(configs, language, database, economy, items, feedback, features, progression, diagnostics);
+        service = new PurchaseService(configs, language, database, economy, items, feedback, features, diagnostics);
     }
 
     @Test
-    void buysFiveTicketsWithOneWithdrawalAndFiveProgressionPoints() {
+    void buysFiveTicketsWithOneWithdrawalAndCorrectDailyCounter() {
         when(database.countPurchasesSince(eq(uuid), anyLong())).thenReturn(3, 8);
         assertTrue(service.buy(player, type, 5));
         verify(economy).withdraw(player, 2500);
         verify(database).recordPurchases(uuid, "Wullverin", "small", 500, 5);
-        verify(progression).onBuy(player, 5);
         ArgumentCaptor<ItemStack[]> stacks = ArgumentCaptor.forClass(ItemStack[].class);
         verify(inventory).addItem(stacks.capture());
         assertEquals(5, stacks.getValue()[0].getAmount());
@@ -90,7 +88,7 @@ class PurchaseServiceTest {
         when(database.countPurchasesSince(eq(uuid), anyLong())).thenReturn(21);
         assertFalse(service.buy(player, type, 5));
         verify(language).send(eq(player), eq("purchase_limit_day"), anyMap());
-        verifyNoInteractions(economy, progression);
+        verifyNoInteractions(economy);
         verify(inventory, never()).addItem(any(ItemStack[].class));
     }
 
@@ -101,18 +99,59 @@ class PurchaseServiceTest {
     }
 
     @Test
-    void respectsOwnedLimitForEntireBatch() {
-        when(items.countOwned(player)).thenReturn(60);
-        assertFalse(service.buy(player, type, 5));
-        verify(language).send(eq(player), eq("owned_limit"), anyMap());
-        verifyNoInteractions(economy, progression);
+    void buyingDoesNotCheckOwnershipEvenWithLegacyLimitConfigured() {
+        config.set("limits.max_owned_scratchcards", 1);
+        when(items.countOwned(player)).thenReturn(500);
+        assertTrue(service.buy(player, type, 5));
+        verify(items, never()).countOwned(player);
+        verify(economy).withdraw(player, 2500);
+        verify(language, never()).send(eq(player), eq("owned_limit"), anyMap());
+    }
+
+    @Test
+    void givingMoreThanSixtyFourTicketsOnlyChecksInventoryCapacity() {
+        config.set("limits.max_owned_scratchcards", 1);
+        when(items.freeCapacity(player, type)).thenReturn(100);
+        PurchaseService.GiveResult result = service.give(player, type, 70);
+        assertEquals(70, result.given());
+        assertFalse(result.limited());
+        ArgumentCaptor<ItemStack[]> stacks = ArgumentCaptor.forClass(ItemStack[].class);
+        verify(inventory, times(2)).addItem(stacks.capture());
+        assertEquals(List.of(64, 6), stacks.getAllValues().stream().map(value -> value[0].getAmount()).toList());
+        verify(items, never()).countOwned(player);
+        verifyNoInteractions(economy, database);
+    }
+
+    @Test
+    void givingStillReportsInsufficientInventorySpace() {
+        when(items.freeCapacity(player, type)).thenReturn(3);
+        PurchaseService.GiveResult result = service.give(player, type, 10);
+        assertEquals(10, result.requested());
+        assertEquals(3, result.given());
+        assertTrue(result.limited());
+    }
+
+    @Test
+    void dailyFreeTicketDoesNotCheckOwnershipOrAwardProgressionBonuses() {
+        config.set("limits.max_owned_scratchcards", 1);
+        config.set("daily.respect_owned_limit", true);
+        config.set("pass.enabled", true);
+        config.set("streak.enabled", true);
+        config.set("quests.enabled", true);
+        when(player.hasPermission("craftplay.scratchcards.daily")).thenReturn(true);
+        service.claimDaily(player, type);
+        verify(items, never()).countOwned(player);
+        verify(database).recordDailyClaim(uuid, "Wullverin", "small", 1);
+        verify(language).send(eq(player), eq("daily_claimed"), anyMap());
+        verifyNoMoreInteractions(language);
+        verifyNoInteractions(economy);
     }
 
     @Test
     void rejectsFullInventoryBeforeCharging() {
         when(items.canFit(player, type, 5)).thenReturn(false);
         assertFalse(service.buy(player, type, 5));
-        verifyNoInteractions(economy, progression);
+        verifyNoInteractions(economy);
         verify(database, never()).recordPurchases(any(), anyString(), anyString(), anyDouble(), anyInt());
     }
 
@@ -130,14 +169,13 @@ class PurchaseServiceTest {
         assertFalse(service.buy(player, type, 5));
         verify(inventory, never()).addItem(any(ItemStack[].class));
         verify(database, never()).recordPurchases(any(), anyString(), anyString(), anyDouble(), anyInt());
-        verifyNoInteractions(progression);
     }
 
     @ParameterizedTest
     @ValueSource(ints = {0, -1, 65, Integer.MAX_VALUE})
     void rejectsInvalidAmounts(int amount) {
         assertFalse(service.buy(player, type, amount));
-        verifyNoInteractions(economy, items, database, progression);
+        verifyNoInteractions(economy, items, database);
     }
 
     @Test
@@ -165,7 +203,7 @@ class PurchaseServiceTest {
         assertSame(snapshot, contents.getValue()[0]);
         assertNull(contents.getValue()[1]);
         verify(economy).deposit(player, 2500);
-        verifyNoInteractions(progression, feedback);
+        verifyNoInteractions(feedback);
     }
 
     @Test
@@ -177,7 +215,6 @@ class PurchaseServiceTest {
         verify(inventory).setStorageContents(any(ItemStack[].class));
         verify(economy).deposit(player, 2500);
         verify(database, never()).recordPurchases(any(), anyString(), anyString(), anyDouble(), anyInt());
-        verifyNoInteractions(progression);
     }
 
     @Test
@@ -189,12 +226,11 @@ class PurchaseServiceTest {
     }
 
     @Test
-    void logsFailedRefundAndDoesNotCountPurchaseProgress() {
+    void logsFailedRefundWithoutDeliveringTickets() {
         when(database.recordPurchases(uuid, "Wullverin", "small", 500, 5)).thenReturn(false);
         when(economy.deposit(player, 2500)).thenReturn(false);
         assertFalse(service.buy(player, type, 5));
         verify(diagnostics).error(contains("Kauf-Erstattung fehlgeschlagen"), isNull());
         verify(language).send(eq(player), eq("purchase_refund_failed"), anyMap());
-        verifyNoInteractions(progression);
     }
 }

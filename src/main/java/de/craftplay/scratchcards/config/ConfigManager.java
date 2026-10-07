@@ -53,11 +53,22 @@ public final class ConfigManager {
     }
 
     private void syncExistingFiles() {
-        syncFile("config.yml", List.of("limits.max_purchases_per_hour", "limits.max_opens_per_day", "bedrock_support", "server_goal"));
-        syncFile("gui.yml", List.of());
+        syncFile("config.yml", List.of(
+                "limits.max_purchases_per_hour", "limits.max_opens_per_day", "limits.max_owned_scratchcards", "daily.respect_owned_limit",
+                "bedrock_support", "server_goal", "risk", "pass", "quests", "series", "streak", "pity", "group_goals"));
+        syncFile("gui.yml", List.of("board.items.pass", "board.items.quests", "board.items.group_goals"));
         syncFile("rewards.yml", List.of());
-        syncFile("language_de.yml", List.of("bedrock_shop_opener_given", "open_limit_day", "server_goal_completed"));
-        syncFile("language_en.yml", List.of("bedrock_shop_opener_given", "open_limit_day", "server_goal_completed"));
+        List<String> obsoleteMessages = List.of(
+                "bedrock_shop_opener_given", "open_limit_day", "server_goal_completed", "owned_limit",
+                "streak_progress", "streak_reward", "series_header", "series_empty",
+                "series_status_completed", "series_status_open", "series_line", "series_symbol_collected",
+                "series_completed", "series_broadcast", "pass_xp", "pass_level_reward",
+                "pass_info", "quests_header", "quests_empty", "quests_line",
+                "quest_status_completed", "quest_status_open", "quest_completed", "pity_progress",
+                "pity_guaranteed", "group_goal_completed", "risk_available", "risk_none",
+                "risk_expired", "risk_cannot_withdraw", "risk_win", "risk_lose");
+        syncFile("language_de.yml", obsoleteMessages);
+        syncFile("language_en.yml", obsoleteMessages);
     }
 
     private void syncFile(String name, List<String> obsoletePaths) {
@@ -74,6 +85,7 @@ public final class ConfigManager {
             }
             if (name.equals("gui.yml")) {
                 changed = migrateShopAmounts(current) || changed;
+                changed = migrateOwnedLimitTexts(current) || changed;
                 changed = replaceTextValue(current, "%daily_opened%/%daily_open_limit%", "%daily_opened%") || changed;
                 changed = replaceTextValue(current, "%daily_open_limit%", "-") || changed;
                 changed = replaceTextValue(current, "%daily_open_remaining%", "-") || changed;
@@ -100,6 +112,15 @@ public final class ConfigManager {
                 if (german) {
                     changed = migrateGermanDefaultTexts(current, defaults) || changed;
                 }
+                changed = replaceExactValue(current, "give_limited", german
+                                ? "%prefix%&eEs konnten nur &6%given%/%requested%x %type% &ean &6%player% &egegeben werden. &7Besitz: &e%owned%/%owned_limit%&7."
+                                : "%prefix%&eOnly &6%given%/%requested%x %type% &ecould be given to &6%player%&e. &7Owned: &e%owned%/%owned_limit%&7.",
+                        defaults.getString("give_limited")) || changed;
+                changed = migrateOwnedLimitTexts(current) || changed;
+                changed = replaceTextValue(current, "Jackpot-/Pass-/Ziel-Board öffnen", "Jackpot- und Lucky-Hour-Board öffnen") || changed;
+                changed = replaceTextValue(current, "Jackpot-/Pass-/Ziel-Board oeffnen", "Jackpot- und Lucky-Hour-Board öffnen") || changed;
+                changed = replaceTextValue(current, "jackpot/pass/goal board", "jackpot and Lucky Hour board") || changed;
+                changed = removeRetiredHelpEntries(current) || changed;
                 changed = mergeMissingListEntries(current, defaults, "help") || changed;
             }
             for (String path : obsoletePaths) {
@@ -145,6 +166,24 @@ public final class ConfigManager {
             return false;
         }
         current.set(path, newValue);
+        return true;
+    }
+
+    private boolean migrateOwnedLimitTexts(YamlConfiguration current) {
+        boolean changed = replaceTextValue(current, "%owned%/%owned_limit%", "%owned%");
+        changed = replaceTextValue(current, "%owned_limit%", "-") || changed;
+        return replaceTextValue(current, "%owned_remaining%", "-") || changed;
+    }
+
+    private boolean removeRetiredHelpEntries(YamlConfiguration current) {
+        List<String> help = current.getStringList("help");
+        List<String> remaining = help.stream()
+                .filter(line -> !line.matches("(?i).*?/(?:rubbellos|rubellos|scratchcard)\\s+(?:risk|pass|quests|series)(?:\\s|$).*"))
+                .toList();
+        if (remaining.size() == help.size()) {
+            return false;
+        }
+        current.set("help", remaining);
         return true;
     }
 

@@ -9,7 +9,7 @@
 | Bereich | Details |
 | --- | --- |
 | Plugin | Craftplay-Rubbellose |
-| Version | 0.3.5 |
+| Version | 0.3.6 |
 | Server | Paper/Purpur 1.21.x |
 | Java | Java 21 |
 | Wirtschaft | Vault + Economy-Plugin |
@@ -26,13 +26,11 @@
 - Jackpot-Broadcasts und Jackpot-Historie
 - Tageslimit fuer Kaeufe; kein Tageslimit fuer Oeffnungen
 - Mehrfachkauf mit Mengenauswahl und Gesamtpreis
-- Besitzlimit fuer echte Plugin-Rubellose
 - Persistenz: offene Rubellose bleiben nach Disconnect oder Restart erhalten
 - Spieler- und Serverstatistiken
 - PlaceholderAPI-Unterstuetzung fuer externe Anzeigen
 - Admin-Befehle fuer Reload, Diagnose, Give und offene Lose
-- Daily-Los, Lucky Hour, Streaks, Serien, Eventlose und Mystery-Multiplikator
-- Rubellos-Pass, tägliche Quests, Gruppenziele, Pity-System und Risiko-Spiel
+- Daily-Los, Lucky Hour, Eventlose und Mystery-Multiplikator
 - Bedrock/Geyser-kompatible Command-Registrierung ohne Inventar-Item
 
 ## So Funktioniert Es
@@ -47,9 +45,11 @@ Beim Oeffnen wird das Ergebnis sofort serverseitig berechnet und gespeichert. Da
 
 ![Craftplay Rubbellose Shop-GUI](wiki-assets/gui-shop.png)
 
-Im Shop werden die verfügbaren Rubellos-Typen angezeigt. Jedes Los zeigt Einzelpreis, ausgewählte Menge, Gesamtpreis, Gewinnchance und mögliche Gewinne. Zuerst die Menge (1, 5 oder 10) auswählen, dann den Lostyp anklicken. Die Statistik in der Mitte informiert über gekaufte und geöffnete Lose, Tageskauflimit und Besitzlimit. Ein Mehrfachkauf erfolgt nur, wenn Geld, Platz und verbleibende Limits für alle Lose reichen. Jedes Los zählt einzeln zum Kauflimit.
+Im Shop werden die verfügbaren Rubellos-Typen angezeigt. Jedes Los zeigt Einzelpreis, ausgewählte Menge, Gesamtpreis, Gewinnchance und mögliche Gewinne. Zuerst die Menge (1, 5 oder 10) auswählen, dann den Lostyp anklicken. Die Statistik in der Mitte informiert über gekaufte und geöffnete Lose, Tageskauflimit und aktuelle Losanzahl. Ein Mehrfachkauf erfolgt nur, wenn Geld, Platz und das verbleibende Kauflimit für alle Lose reichen. Jedes Los zählt einzeln zum Kauflimit.
 
 Mengen und Slots stehen in `gui.yml` unter `shop.quantity_selector`. `purchases.max_amount_per_purchase` in `config.yml` begrenzt die Menge pro Kauf. Das alte `limits.max_opens_per_day` wird automatisch entfernt; Oeffnungs-Cooldown und Schutz vor gleichzeitig laufenden Losen bleiben bestehen.
+
+Ein Besitzlimit gibt es nicht mehr: Lose aus Käufen, Give oder Geschenken dürfen gesammelt und ohne Tages-Öffnungslimit genutzt werden, solange genügend Inventarplatz vorhanden ist. Risiko-Spiel, Pass, XP und weitere Fortschrittsbelohnungen sind entfernt. Veraltete Einstellungen werden automatisch bereinigt; Preise, Chancen und das Kauflimit bleiben erhalten.
 
 ### Rubbel-GUI
 
@@ -90,11 +90,7 @@ Die Lose und Belohnungen werden in `rewards.yml` konfiguriert. Chancen werden ge
 | `/rubbellos claim` | offenes Rubellos fortsetzen |
 | `/rubbellos daily` | taegliches Gratis-Los abholen |
 | `/rubbellos history` | eigene Gewinn-Historie anzeigen |
-| `/rubbellos series` | Rubellos-Serien anzeigen |
-| `/rubbellos pass` | Rubellos-Pass anzeigen |
-| `/rubbellos quests` | taegliche Auftraege anzeigen |
-| `/rubbellos board` | Jackpot-, Pass- und Ziel-Board oeffnen |
-| `/rubbellos risk` | letzten Geldgewinn riskieren |
+| `/rubbellos board` | Jackpot- und Lucky-Hour-Board öffnen |
 | `/rubbellos gift <spieler> <typ> <anzahl>` | eigene Lose verschenken |
 | `/rubbellos jackpots` | Jackpot-Historie oeffnen oder anzeigen |
 | `/rubbellos stats` | Serverstatistiken anzeigen |
@@ -123,7 +119,7 @@ Die Lose und Belohnungen werden in `rewards.yml` konfiguriert. Chancen werden ge
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.5.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.6.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein kompatibles Economy-Plugin installieren.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.

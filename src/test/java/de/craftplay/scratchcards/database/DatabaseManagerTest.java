@@ -3,6 +3,7 @@ package de.craftplay.scratchcards.database;
 import de.craftplay.scratchcards.CraftplayScratchcardsPlugin;
 import de.craftplay.scratchcards.config.ConfigManager;
 import de.craftplay.scratchcards.diagnostic.DiagnosticLogger;
+import de.craftplay.scratchcards.util.ServerDayUtil;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.sql.DriverManager;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -100,6 +103,24 @@ class DatabaseManagerTest {
                 assertTrue(names.contains("cpsc_" + table), table);
             }
         }
+    }
+
+    @Test
+    void dailyClaimsSurviveRestartsButDoNotBlockTheNextServerDay() throws Exception {
+        long claimedAt = LocalDateTime.parse("2026-10-07T22:30:00")
+                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        database.recordDailyClaim(uuid, "Player", "small", 1);
+        try (var connection = DriverManager.getConnection("jdbc:sqlite:" + directory.resolve("scratchcards.db"));
+             var statement = connection.prepareStatement("UPDATE cpsc_daily_claims SET claimed_at = ? WHERE uuid = ?")) {
+            statement.setLong(1, claimedAt);
+            statement.setString(2, uuid.toString());
+            statement.executeUpdate();
+        }
+        database.close();
+        database.initialize();
+        assertEquals(1, database.countDailyClaimsSince(uuid, ServerDayUtil.serverDayStartMillis(claimedAt)));
+        assertEquals(0, database.countDailyClaimsSince(uuid, ServerDayUtil.nextServerDayStartMillis(claimedAt)));
+        assertEquals(0, database.countPurchasesSince(uuid, 0));
     }
 
     @Test

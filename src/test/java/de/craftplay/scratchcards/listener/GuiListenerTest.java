@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class GuiListenerTest {
@@ -80,6 +81,42 @@ class GuiListenerTest {
         listener.onClick(event);
         verify(event).setCancelled(true);
         verifyNoInteractions(purchases);
+    }
+
+    @Test
+    void dailyButtonClaimsTheDailyTypeWithoutBuyingTheSelectedQuantity() {
+        holder.dailySlot(24);
+        holder.amount(10);
+        when(gui.dailyTypeId()).thenReturn("small");
+        when(event.getRawSlot()).thenReturn(24);
+        listener.onClick(event);
+        verify(event).setCancelled(true);
+        verify(purchases).claimDaily(player, type);
+        verify(purchases, never()).buy(any(), any(), anyInt());
+        verify(gui).refreshShop(player, holder);
+        verify(player, never()).openInventory(any(Inventory.class));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ClickType.class, names = {"SHIFT_LEFT", "SHIFT_RIGHT", "NUMBER_KEY", "DOUBLE_CLICK", "DROP", "SWAP_OFFHAND"})
+    void specialClicksCannotClaimDailyTickets(ClickType click) {
+        holder.dailySlot(24);
+        when(event.getClick()).thenReturn(click);
+        when(event.getRawSlot()).thenReturn(24);
+        listener.onClick(event);
+        verify(event).setCancelled(true);
+        verifyNoInteractions(purchases);
+    }
+
+    @Test
+    void invalidDailyTypeDoesNotGiveOrBuyAnything() {
+        holder.dailySlot(24);
+        when(gui.dailyTypeId()).thenReturn("missing");
+        when(rewards.type("missing")).thenReturn(Optional.empty());
+        when(event.getRawSlot()).thenReturn(24);
+        listener.onClick(event);
+        verifyNoInteractions(purchases);
+        verify(gui).refreshShop(player, holder);
     }
 
     @Test

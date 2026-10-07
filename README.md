@@ -19,13 +19,13 @@ mvn package
 Die fertige Plugin-Datei liegt danach hier:
 
 ```text
-target/Craftplay-Rubbellose-0.3.6.jar
+target/Craftplay-Rubbellose-0.3.7.jar
 ```
 
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.6.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.7.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein Economy-Plugin installieren, falls noch nicht vorhanden.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.
@@ -88,7 +88,7 @@ Wenn PlaceholderAPI installiert ist, werden diese Platzhalter registriert:
 
 ## Spielerfeatures
 
-- Daily-Los mit taeglichem Reset nach Rootserver-/JVM-Zeit.
+- Tägliches Gratislos direkt im Shop mit laufendem Countdown bis zur nächsten Server-Mitternacht.
 - Nur Käufe haben ein konfigurierbares Tageslimit; kein Besitz- oder Öffnungslimit.
 - Mehrfachkauf mit Mengenauswahl und Gesamtpreis im Shop.
 - Gewinnvorschau mit Seltenheiten und effektiven Chancen.
@@ -110,6 +110,16 @@ Im Shop zuerst die Menge (standardmäßig 1, 5 oder 10) auswählen, dann den gew
 Geld, Inventarplatz und Tageskauflimit müssen für die gesamte Menge reichen. Sonst wird nichts gekauft oder abgebucht. Der Standard erlaubt 25 gekaufte Lose pro Tag, nicht 25 Kaufvorgänge. Dein bereits eingestelltes Limit, etwa 10, bleibt beim Update erhalten. Jedes Los zählt einzeln für das Kauflimit und die normalen Statistiken. Es gibt keine XP oder Fortschrittsbelohnungen. Bei einem Speicherfehler wird das Inventar zurückgesetzt und eine Erstattung versucht; fehlgeschlagene Erstattungen werden protokolliert.
 
 Das bisherige `limits.max_opens_per_day` wird beim Start oder `/rubbellos reload` automatisch entfernt. Alle vorhandenen Lose koennen ohne Tages-Oeffnungslimit geoeffnet werden; Cooldown und Schutz vor mehreren gleichzeitig laufenden Losen bleiben erhalten. Bestehende eigene Einstellungen bleiben erhalten, neue Kaufoptionen werden automatisch ergaenzt.
+
+## Tägliches Gratislos Im Shop
+
+Im Shop liegt standardmäßig in Slot 24 ein Gratislos-Button. Ein normaler Links- oder Rechtsklick gibt das unter `daily.type` und `daily.amount` konfigurierte Gratislos. Die ausgewählte Kaufmenge und das Tageskauflimit spielen dabei keine Rolle. Das normale Inventar erhält nur das Los, kein dauerhaftes Menü-Item.
+
+Nach dem Abholen zeigt eine Uhr die Restzeit bis 00:00 Uhr im Format `HH:MM:SS`. Der Countdown wird einmal pro Sekunde aktualisiert. Um Mitternacht nach Rootserver-/JVM-Zeit ist das nächste Los verfügbar, auch wenn der Shop noch geöffnet ist. Sommer-/Winterzeit wird berücksichtigt; es ist keine Wartezeit von 24 Stunden ab dem Abholen.
+
+Slot, Material, Name und Lore sind in `gui.yml` unter `shop.daily` einstellbar. Die drei Zustände sind `available_item`, `claimed_item` und `disabled_item`. Der Platzhalter `%daily_countdown%` zeigt die Restzeit, `%type%` den Lostyp und `%amount%` die tägliche Menge. Bei fehlender Berechtigung, deaktiviertem Gratislos oder inaktivem Lostyp wird der Button gesperrt angezeigt. Belegte oder ungültige Button-Slots überschreiben keine Kauf- oder Mengenbuttons.
+
+Die neuen GUI- und Spracheinträge werden automatisch ergänzt. Bestehende Daily-Einstellungen, Preise, Chancen und Kauflimits bleiben erhalten. Abholungen bleiben über Serverneustarts hinweg gespeichert; volle Inventare verbrauchen das Gratislos nicht. `/rubbellos daily` funktioniert weiterhin und aktualisiert einen offenen Shop ebenfalls.
 
 ## Sicherheitslogik
 

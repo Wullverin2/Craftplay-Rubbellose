@@ -6,17 +6,21 @@ import de.craftplay.scratchcards.database.DatabaseManager;
 import de.craftplay.scratchcards.diagnostic.DiagnosticLogger;
 import de.craftplay.scratchcards.economy.EconomyManager;
 import de.craftplay.scratchcards.gui.GuiManager;
+import de.craftplay.scratchcards.model.ScratchcardType;
 import de.craftplay.scratchcards.service.FeatureService;
 import de.craftplay.scratchcards.service.PurchaseService;
 import de.craftplay.scratchcards.service.RewardManager;
 import de.craftplay.scratchcards.service.ScratchcardItemFactory;
 import de.craftplay.scratchcards.service.ScratchcardSessionManager;
 import org.bukkit.entity.Player;
+import org.bukkit.Material;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -34,7 +38,7 @@ class ScratchcardCommandTest {
     private final RewardManager rewards = mock(RewardManager.class);
     private final ScratchcardItemFactory items = mock(ScratchcardItemFactory.class);
     private final Player player = mock(Player.class);
-    private final ScratchcardCommand command = new ScratchcardCommand(() -> {}, "0.3.6", configs, language,
+    private final ScratchcardCommand command = new ScratchcardCommand(() -> {}, "0.3.7", configs, language,
             diagnostics, economy, rewards, purchases, sessions, gui, database, features, items);
 
     @ParameterizedTest
@@ -59,5 +63,17 @@ class ScratchcardCommandTest {
         assertTrue(command.execute(player, "rubbellos", "rubbellos", new String[]{}));
         verify(gui).openShop(player);
         verify(language).send(player, "shop_opened");
+    }
+
+    @Test
+    void claimingViaCommandAlsoRefreshesTheOpenShopButton() {
+        YamlConfiguration config = new YamlConfiguration();
+        when(configs.config()).thenReturn(config);
+        ScratchcardType type = new ScratchcardType("small", "Small", Material.PAPER, Material.PAPER,
+                500, true, 0, 0, List.of());
+        when(rewards.type("small")).thenReturn(Optional.of(type));
+        assertTrue(command.execute(player, "rubbellos", "rubbellos", new String[]{"daily"}));
+        verify(purchases).claimDaily(player, type);
+        verify(gui).refreshShopIfOpen(player);
     }
 }

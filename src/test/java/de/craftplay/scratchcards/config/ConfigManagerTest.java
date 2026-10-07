@@ -113,6 +113,36 @@ class ConfigManagerTest {
     }
 
     @Test
+    void addsDailyButtonAndCountdownWithoutOverwritingConfiguredDailyRewardsOrGui() throws Exception {
+        YamlConfiguration config = new YamlConfiguration();
+        config.set("daily.type", "premium");
+        config.set("daily.amount", 2);
+        config.set("limits.max_purchases_per_day", 10);
+        config.save(directory.resolve("config.yml").toFile());
+        YamlConfiguration gui = new YamlConfiguration();
+        gui.set("shop.daily.slot", 26);
+        gui.set("shop.daily.available_item.name", "Mein eigener Gratislos-Button");
+        gui.set("shop.daily.available_item.material", "EMERALD");
+        gui.save(directory.resolve("gui.yml").toFile());
+
+        configs.load();
+
+        assertEquals("premium", configs.config().getString("daily.type"));
+        assertEquals(2, configs.config().getInt("daily.amount"));
+        assertEquals(10, configs.config().getInt("limits.max_purchases_per_day"));
+        assertTrue(configs.gui().getBoolean("shop.daily.enabled"));
+        assertEquals(26, configs.gui().getInt("shop.daily.slot"));
+        assertEquals("Mein eigener Gratislos-Button", configs.gui().getString("shop.daily.available_item.name"));
+        assertEquals("EMERALD", configs.gui().getString("shop.daily.available_item.material"));
+        assertTrue(configs.gui().getStringList("shop.daily.claimed_item.lore").stream()
+                .anyMatch(line -> line.contains("%daily_countdown%")));
+        assertTrue(configs.language().contains("daily_button_disabled"));
+        String first = Files.readString(directory.resolve("gui.yml"));
+        configs.load();
+        assertEquals(first, Files.readString(directory.resolve("gui.yml")));
+    }
+
+    @Test
     void correctsGermanStandardTextsWithoutChangingCustomTextOrDuplicatingLoreAndHelp() throws Exception {
         YamlConfiguration config = new YamlConfiguration();
         config.set("rarities.common.display_name", "&7Gewoehnlich");

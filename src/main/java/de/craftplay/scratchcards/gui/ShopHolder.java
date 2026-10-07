@@ -10,6 +10,9 @@ public final class ShopHolder implements InventoryHolder {
     private final Map<Integer, String> slotTypes = new HashMap<>();
     private final Map<Integer, Integer> slotAmounts = new HashMap<>();
     private int amount = 1;
+    private int dailySlot = -1;
+    private long dailyDayStart = Long.MIN_VALUE;
+    private boolean dailyClaimed;
     private Inventory inventory;
 
     public void setInventory(Inventory inventory) {
@@ -27,6 +30,33 @@ public final class ShopHolder implements InventoryHolder {
     public void clearMappings() {
         slotTypes.clear();
         slotAmounts.clear();
+        dailySlot = -1;
+        dailyDayStart = Long.MIN_VALUE;
+    }
+
+    public void dailySlot(int slot) {
+        dailySlot = slot;
+    }
+
+    public int dailySlot() {
+        return dailySlot;
+    }
+
+    public boolean isDailySlot(int slot) {
+        return dailySlot >= 0 && dailySlot == slot;
+    }
+
+    public void dailyState(long dayStart, boolean claimed) {
+        dailyDayStart = dayStart;
+        dailyClaimed = claimed;
+    }
+
+    public long dailyDayStart() {
+        return dailyDayStart;
+    }
+
+    public boolean dailyClaimed() {
+        return dailyClaimed;
     }
 
     public void setAmountOption(int slot, int amount) {

@@ -11,6 +11,7 @@ import de.craftplay.scratchcards.gui.ShopHolder;
 import de.craftplay.scratchcards.service.PurchaseService;
 import de.craftplay.scratchcards.service.RewardManager;
 import de.craftplay.scratchcards.service.ScratchcardSessionManager;
+import de.craftplay.scratchcards.util.TextUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -56,6 +57,15 @@ public final class GuiListener implements Listener {
             event.setCancelled(true);
             if (!(event.getWhoClicked() instanceof Player player) || event.getRawSlot() < 0 || event.getRawSlot() >= top.getSize()
                     || (event.getClick() != ClickType.LEFT && event.getClick() != ClickType.RIGHT)) {
+                return;
+            }
+            if (shopHolder.isDailySlot(event.getRawSlot())) {
+                String typeId = guiManager.dailyTypeId();
+                rewardManager.type(typeId).ifPresentOrElse(
+                        type -> purchaseService.claimDaily(player, type),
+                        () -> languageManager.send(player, "type_not_found", TextUtil.placeholders("%type%", typeId))
+                );
+                guiManager.refreshShop(player, shopHolder);
                 return;
             }
             Integer amount = shopHolder.amountAt(event.getRawSlot());

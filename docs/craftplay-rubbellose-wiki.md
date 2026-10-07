@@ -9,7 +9,7 @@
 | Bereich | Details |
 | --- | --- |
 | Plugin | Craftplay-Rubbellose |
-| Version | 0.3.6 |
+| Version | 0.3.7 |
 | Server | Paper/Purpur 1.21.x |
 | Java | Java 21 |
 | Wirtschaft | Vault + Economy-Plugin |
@@ -26,6 +26,7 @@
 - Jackpot-Broadcasts und Jackpot-Historie
 - Tageslimit fuer Kaeufe; kein Tageslimit fuer Oeffnungen
 - Mehrfachkauf mit Mengenauswahl und Gesamtpreis
+- Gratislos-Button im Shop mit laufendem Countdown bis Mitternacht
 - Persistenz: offene Rubellose bleiben nach Disconnect oder Restart erhalten
 - Spieler- und Serverstatistiken
 - PlaceholderAPI-Unterstuetzung fuer externe Anzeigen
@@ -50,6 +51,12 @@ Im Shop werden die verfügbaren Rubellos-Typen angezeigt. Jedes Los zeigt Einzel
 Mengen und Slots stehen in `gui.yml` unter `shop.quantity_selector`. `purchases.max_amount_per_purchase` in `config.yml` begrenzt die Menge pro Kauf. Das alte `limits.max_opens_per_day` wird automatisch entfernt; Oeffnungs-Cooldown und Schutz vor gleichzeitig laufenden Losen bleiben bestehen.
 
 Ein Besitzlimit gibt es nicht mehr: Lose aus Käufen, Give oder Geschenken dürfen gesammelt und ohne Tages-Öffnungslimit genutzt werden, solange genügend Inventarplatz vorhanden ist. Risiko-Spiel, Pass, XP und weitere Fortschrittsbelohnungen sind entfernt. Veraltete Einstellungen werden automatisch bereinigt; Preise, Chancen und das Kauflimit bleiben erhalten.
+
+### Tägliches Gratislos
+
+Im Shop kann das tägliche Gratislos direkt über den Button abgeholt werden. Nach dem Abholen zeigt eine Uhr den Countdown bis zur nächsten Mitternacht nach Rootserver-/JVM-Zeit. Der Countdown aktualisiert sich jede Sekunde. Um 00:00 Uhr wird der Button automatisch wieder verfügbar, auch in einem geöffneten Shop. Die tägliche Menge ist unabhängig von der ausgewählten Kaufmenge; das Gratislos verbraucht kein Kauflimit. Volle Inventare verbrauchen den täglichen Anspruch nicht.
+
+Die Anzeige steht in `gui.yml` unter `shop.daily` (Standard-Slot: 24). `%daily_countdown%` zeigt `HH:MM:SS`. Typ und Anzahl bleiben unter `daily.type` und `daily.amount` in `config.yml` einstellbar. Neue Einträge werden automatisch ergänzt.
 
 ### Rubbel-GUI
 
@@ -119,7 +126,7 @@ Die Lose und Belohnungen werden in `rewards.yml` konfiguriert. Chancen werden ge
 ## Installation
 
 1. Server stoppen.
-2. `Craftplay-Rubbellose-0.3.6.jar` in den `plugins`-Ordner kopieren.
+2. `Craftplay-Rubbellose-0.3.7.jar` in den `plugins`-Ordner kopieren.
 3. Vault und ein kompatibles Economy-Plugin installieren.
 4. Server starten.
 5. Dateien in `plugins/Craftplay-Rubbellose/` anpassen.

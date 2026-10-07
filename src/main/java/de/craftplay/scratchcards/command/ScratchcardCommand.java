@@ -353,6 +353,7 @@ public final class ScratchcardCommand implements CommandExecutor, TabCompleter {
             return;
         }
         purchaseService.claimDaily(player, type);
+        guiManager.refreshShopIfOpen(player);
     }
 
     private void board(CommandSender sender) {

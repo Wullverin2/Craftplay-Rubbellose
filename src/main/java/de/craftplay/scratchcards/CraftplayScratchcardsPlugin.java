@@ -19,6 +19,7 @@ import de.craftplay.scratchcards.service.ScratchcardItemFactory;
 import de.craftplay.scratchcards.service.ScratchcardSessionManager;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -37,6 +38,7 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
     private FeatureService featureService;
     private ScratchcardSessionManager sessionManager;
     private CpscPlaceholderExpansion placeholderExpansion;
+    private BukkitTask shopRefreshTask;
 
     @Override
     public void onEnable() {
@@ -70,6 +72,13 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
             registerCommands();
             registerListeners();
             registerPlaceholderApi();
+            shopRefreshTask = getServer().getScheduler().runTaskTimer(this, () -> {
+                try {
+                    guiManager.updateOpenShops();
+                } catch (Throwable throwable) {
+                    diagnosticLogger.error("Fehler beim Aktualisieren des Gratislos-Countdowns.", throwable);
+                }
+            }, 20L, 20L);
 
             diagnosticLogger.info("Plugin-Start erfolgreich abgeschlossen.");
             getLogger().info("Craftplay-Rubbellose wurde aktiviert.");
@@ -85,6 +94,9 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         try {
+            if (shopRefreshTask != null) {
+                shopRefreshTask.cancel();
+            }
             if (placeholderExpansion != null) {
                 placeholderExpansion.unregister();
             }
@@ -157,6 +169,7 @@ public final class CraftplayScratchcardsPlugin extends JavaPlugin {
         try {
             configManager.load();
             rewardManager.reload();
+            getServer().getOnlinePlayers().forEach(guiManager::refreshShopIfOpen);
             if (diagnosticLogger != null) {
                 diagnosticLogger.info("Konfiguration wurde neu geladen.");
             }

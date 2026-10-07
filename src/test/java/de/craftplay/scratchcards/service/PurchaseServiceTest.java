@@ -6,6 +6,7 @@ import de.craftplay.scratchcards.database.DatabaseManager;
 import de.craftplay.scratchcards.diagnostic.DiagnosticLogger;
 import de.craftplay.scratchcards.economy.EconomyManager;
 import de.craftplay.scratchcards.model.ScratchcardType;
+import de.craftplay.scratchcards.util.ServerDayUtil;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -145,6 +146,51 @@ class PurchaseServiceTest {
         verify(language).send(eq(player), eq("daily_claimed"), anyMap());
         verifyNoMoreInteractions(language);
         verifyNoInteractions(economy);
+    }
+
+    @Test
+    void dailyTicketCanBeClaimedOncePerServerDayWithoutUsingThePurchaseAllowance() {
+        when(player.hasPermission("craftplay.scratchcards.daily")).thenReturn(true);
+        config.set("limits.max_purchases_per_day", 1);
+        when(database.countPurchasesSince(eq(uuid), anyLong())).thenReturn(1);
+        long[] currentDay = {1000};
+        long[] claimedDay = {Long.MIN_VALUE};
+        when(database.countDailyClaimsSince(eq(uuid), anyLong())).thenAnswer(invocation ->
+                claimedDay[0] == invocation.getArgument(1, Long.class) ? 1 : 0);
+        doAnswer(invocation -> {
+            claimedDay[0] = currentDay[0];
+            return null;
+        }).when(database).recordDailyClaim(uuid, "Wullverin", "small", 1);
+        try (var clock = mockStatic(ServerDayUtil.class)) {
+            clock.when(ServerDayUtil::currentServerDayStartMillis).thenAnswer(invocation -> currentDay[0]);
+            service.claimDaily(player, type);
+            service.claimDaily(player, type);
+            currentDay[0] = 2000;
+            service.claimDaily(player, type);
+        }
+        verify(database, times(2)).recordDailyClaim(uuid, "Wullverin", "small", 1);
+        verify(inventory, times(2)).addItem(any(ItemStack[].class));
+        verify(language).send(player, "daily_already_claimed");
+        verifyNoInteractions(economy);
+        verify(database, never()).recordPurchases(any(), anyString(), anyString(), anyDouble(), anyInt());
+        verify(database, never()).countPurchasesSince(any(), anyLong());
+    }
+
+    @Test
+    void fullInventoryDoesNotConsumeTheDailyClaim() {
+        when(player.hasPermission("craftplay.scratchcards.daily")).thenReturn(true);
+        when(items.canFit(player, type, 1)).thenReturn(false);
+        service.claimDaily(player, type);
+        verify(language).send(player, "inventory_full");
+        verify(database, never()).recordDailyClaim(any(), anyString(), anyString(), anyInt());
+        verify(inventory, never()).addItem(any(ItemStack[].class));
+    }
+
+    @Test
+    void missingDailyPermissionDoesNotDeliverTickets() {
+        service.claimDaily(player, type);
+        verify(language).send(player, "no_permission");
+        verifyNoInteractions(database, items, economy);
     }
 
     @Test

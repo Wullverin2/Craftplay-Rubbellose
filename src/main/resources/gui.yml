@@ -54,6 +54,29 @@ shop:
       - "&7Geöffnet heute: &e%daily_opened%"
       - "&7Gratis-Los: &e%daily_status%"
       - "&7Im Besitz: &e%owned%"
+  daily:
+    enabled: true
+    slot: 24
+    available_item:
+      material: CHEST
+      name: "&aTägliches Gratislos"
+      lore:
+        - "&7Los: %type%"
+        - "&7Anzahl: &e%amount%"
+        - ""
+        - "&aJetzt abholen"
+    claimed_item:
+      material: CLOCK
+      name: "&eGratislos bereits abgeholt"
+      lore:
+        - "&7Nächstes Gratislos in: &e%daily_countdown%"
+        - "&7Wieder verfügbar um &e00:00 Uhr"
+        - "&8Zeit des Rootservers"
+    disabled_item:
+      material: GRAY_DYE
+      name: "&7Gratislos nicht verfügbar"
+      lore:
+        - "%reason%"
 
 jackpots:
   title: "&8Jackpot-Historie"

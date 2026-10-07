@@ -58,9 +58,12 @@ public final class GuiManager {
     }
 
     public void refreshShop(Player player, ShopHolder holder) {
+        long now = System.currentTimeMillis();
         Inventory inventory = holder.getInventory();
         inventory.clear();
         holder.clearMappings();
+        long dayStart = ServerDayUtil.serverDayStartMillis(now);
+        holder.dailyState(dayStart, databaseManager.countDailyClaimsSince(player.getUniqueId(), dayStart) > 0);
         int maxAmount = Math.max(1, configManager.config().getInt("purchases.max_amount_per_purchase", 64));
         if (holder.amount() > maxAmount || !configManager.gui().getBoolean("shop.quantity_selector.enabled", true)) {
             holder.amount(1);
@@ -84,7 +87,7 @@ public final class GuiManager {
 
         int infoSlot = configManager.gui().getInt("shop.info.slot", -1);
         if (infoSlot >= 0 && infoSlot < inventory.getSize()) {
-            inventory.setItem(infoSlot, shopInfoItem(player));
+            inventory.setItem(infoSlot, shopInfoItem(player, holder, dayStart));
         }
 
         if (configManager.gui().getBoolean("shop.quantity_selector.enabled", true)) {
@@ -102,6 +105,70 @@ public final class GuiManager {
                 inventory.setItem(slot, namedItem(path, TextUtil.placeholders("%amount%", String.valueOf(amount))));
             }
         }
+        int dailySlot = configManager.gui().getInt("shop.daily.slot", 24);
+        if (configManager.gui().getBoolean("shop.daily.enabled", true)
+                && dailySlot >= 0 && dailySlot < inventory.getSize() && dailySlot != infoSlot
+                && holder.typeAt(dailySlot) == null && holder.amountAt(dailySlot) == null) {
+            holder.dailySlot(dailySlot);
+            refreshDailyButton(player, holder, now);
+        }
+    }
+
+    public String dailyTypeId() {
+        return configManager.config().getString("daily.type", "small");
+    }
+
+    public void refreshShopIfOpen(Player player) {
+        if (player.getOpenInventory().getTopInventory().getHolder() instanceof ShopHolder holder) {
+            refreshShop(player, holder);
+        }
+    }
+
+    public void updateOpenShops() {
+        long now = System.currentTimeMillis();
+        long dayStart = ServerDayUtil.serverDayStartMillis(now);
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getOpenInventory().getTopInventory().getHolder() instanceof ShopHolder holder) {
+                if (holder.dailyDayStart() != dayStart) {
+                    refreshShop(player, holder);
+                } else {
+                    refreshDailyButton(player, holder, now);
+                }
+            }
+        }
+    }
+
+    private void refreshDailyButton(Player player, ShopHolder holder, long now) {
+        if (holder.dailySlot() < 0) {
+            return;
+        }
+        long dayStart = ServerDayUtil.serverDayStartMillis(now);
+        // Pro offenem Shop nur beim Oeffnen, Abholen oder Tageswechsel aus der Datenbank lesen.
+        if (holder.dailyDayStart() != dayStart) {
+            holder.dailyState(dayStart, databaseManager.countDailyClaimsSince(player.getUniqueId(), dayStart) > 0);
+        }
+        ScratchcardType type = rewardManager.type(dailyTypeId()).orElse(null);
+        String reasonKey = null;
+        if (!configManager.config().getBoolean("daily.enabled", true)) {
+            reasonKey = "daily_button_disabled";
+        } else if (!player.hasPermission("craftplay.scratchcards.daily")
+                && !player.hasPermission("craftplay.scratchcards.admin")) {
+            reasonKey = "daily_button_no_permission";
+        } else if (type == null) {
+            reasonKey = "daily_button_invalid_type";
+        } else if (!featureService.isTypeAvailable(type)) {
+            reasonKey = "daily_button_inactive_type";
+        }
+        String state = reasonKey != null ? "disabled_item" : holder.dailyClaimed() ? "claimed_item" : "available_item";
+        Map<String, String> placeholders = TextUtil.placeholders(
+                "%player%", player.getName(),
+                "%type%", type == null ? dailyTypeId() : type.displayName(),
+                "%type_id%", dailyTypeId(),
+                "%amount%", String.valueOf(Math.max(1, configManager.config().getInt("daily.amount", 1))),
+                "%daily_countdown%", ServerDayUtil.countdownUntilNextServerDay(now),
+                "%reason%", reasonKey == null ? "" : configManager.language().getString(reasonKey, "")
+        );
+        holder.getInventory().setItem(holder.dailySlot(), namedItem("shop.daily." + state, placeholders));
     }
 
     public void openBoard(Player player) {
@@ -238,13 +305,11 @@ public final class GuiManager {
         return lines;
     }
 
-    private ItemStack shopInfoItem(Player player) {
+    private ItemStack shopInfoItem(Player player, ShopHolder holder, long dayStart) {
         PlayerStats stats = databaseManager.getPlayerStats(player.getUniqueId(), player.getName());
-        long dayStart = ServerDayUtil.currentServerDayStartMillis();
         int boughtToday = databaseManager.countPurchasesSince(player.getUniqueId(), dayStart);
         int openedToday = databaseManager.countOpensSince(player.getUniqueId(), dayStart);
-        boolean dailyAvailable = configManager.config().getBoolean("daily.enabled", true)
-                && databaseManager.countDailyClaimsSince(player.getUniqueId(), dayStart) <= 0;
+        boolean dailyAvailable = configManager.config().getBoolean("daily.enabled", true) && !holder.dailyClaimed();
         boolean limitsEnabled = configManager.config().getBoolean("limits.enabled", true);
         int purchaseLimit = limitsEnabled ? configManager.config().getInt("limits.max_purchases_per_day", 25) : 0;
         int owned = itemFactory.countOwned(player);
